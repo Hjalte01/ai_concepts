@@ -1,0 +1,110 @@
+{
+  "date": "2026-09-15",
+  "vault": "study/ATDL",
+  "keywords": [
+    {
+      "term": "Markov chain",
+      "id": "markov-chain"
+    },
+    {
+      "term": "Self-information / surprise",
+      "id": "surprise"
+    },
+    {
+      "term": "Entropy H(X)",
+      "id": "entropy"
+    },
+    {
+      "term": "Kullback\u2013Leibler divergence",
+      "id": "kl-divergence"
+    },
+    {
+      "term": "Data Processing Inequality",
+      "id": "data-processing"
+    },
+    {
+      "term": "L1/L2 regularization",
+      "id": "regularization"
+    },
+    {
+      "term": "Stochastic gradient descent",
+      "id": "sgd"
+    },
+    {
+      "term": "SG epoch",
+      "id": "epoch"
+    },
+    {
+      "term": "Stochastic relaxation",
+      "id": "stochastic-relaxation"
+    },
+    {
+      "term": "Signal\u2013noise ratio",
+      "id": "snr"
+    },
+    {
+      "term": "Empirical risk minimization",
+      "id": "erm"
+    },
+    {
+      "term": "Information plane",
+      "id": "information-plane"
+    },
+    {
+      "term": "Information bottleneck",
+      "id": "information-bottleneck"
+    },
+    {
+      "term": "Representation learning",
+      "id": "representation"
+    },
+    {
+      "term": "Lagrange multiplier",
+      "id": "lagrange"
+    },
+    {
+      "term": "Binarized neural network",
+      "id": "bnn"
+    },
+    {
+      "term": "Kolmogorov\u2013Chaitin complexity",
+      "id": "kolmogorov"
+    },
+    {
+      "term": "Algorithmic probability",
+      "id": "algorithmic-probability"
+    },
+    {
+      "term": "Coding theorem method",
+      "id": "ctm"
+    },
+    {
+      "term": "Block decomposition method",
+      "id": "bdm"
+    },
+    {
+      "term": "Pearson correlation",
+      "id": "pearson"
+    },
+    {
+      "term": "Spearman correlation",
+      "id": "spearman"
+    },
+    {
+      "term": "Straight-through estimator",
+      "id": "ste"
+    },
+    {
+      "term": "Multilayer perceptron",
+      "id": "mlp"
+    },
+    {
+      "term": "Minimum description length",
+      "id": "mdl"
+    },
+    {
+      "term": "Bootstrap confidence interval",
+      "id": "bootstrap"
+    }
+  ]
+}

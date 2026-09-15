@@ -1,0 +1,1300 @@
+[
+  {
+    "id": "probability",
+    "title": "Probability & expectation",
+    "group": "Information",
+    "prerequisites": [],
+    "question": "How do we turn uncertain outcomes into a useful average?",
+    "intuition": "A distribution allocates one unit of belief across possible outcomes. Expectation weights each value by how often it occurs.",
+    "steps": [
+      "List possible outcomes.",
+      "Assign nonnegative probabilities that sum to one.",
+      "Multiply each value by its probability, then add."
+    ],
+    "formula": "E[f(X)] = Σₓ p(x) f(x)",
+    "example": "A fair die has expected value 3.5, even though you will never roll 3.5.",
+    "caveat": "An expectation need not be a possible outcome. The distribution still matters: equal means can hide very different risks.",
+    "origin": "Probability theory grew from questions about uncertain games. Here it supplies the averaging operation that turns surprise into entropy.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "distribution",
+    "check": "An event pays 10 with probability 0.2 and 0 otherwise. What is its expected payoff?",
+    "answer": "2: 0.2 × 10 + 0.8 × 0."
+  },
+  {
+    "id": "surprise",
+    "title": "Surprise / self-information",
+    "group": "Information",
+    "prerequisites": [
+      "probability"
+    ],
+    "question": "How much did learning one outcome tell you?",
+    "intuition": "A rare outcome should tell you more. Independent discoveries should add their information, even though their probabilities multiply.",
+    "steps": [
+      "Require information to decrease as probability increases.",
+      "Require I(pq) = I(p) + I(q) for independent events.",
+      "A negative logarithm does both; base 2 measures bits."
+    ],
+    "formula": "I(x) = −log₂ p(x)",
+    "example": "A fair coin outcome gives 1 bit. A particular result among 8 equally likely outcomes gives 3 bits.",
+    "caveat": "Surprise measures an outcome under a model, not emotional surprise. A zero-probability event has infinite surprise if it occurs.",
+    "origin": "Shannon’s 1948 communication theory connects probability to the length of efficient messages. The logarithm makes independent information additive.",
+    "source": "https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf",
+    "visual": "surprise",
+    "check": "Why does an outcome with probability 1/4 carry 2 bits?",
+    "answer": "Two independent fair binary decisions have probability 1/4; their 1-bit contributions add."
+  },
+  {
+    "id": "entropy",
+    "title": "Entropy",
+    "group": "Information",
+    "prerequisites": [
+      "surprise"
+    ],
+    "question": "Before observing anything, how much surprise should you expect?",
+    "intuition": "Average the surprise of every possible outcome, using the true probabilities as weights.",
+    "steps": [
+      "Each outcome costs −log₂ p(x) bits ideally.",
+      "It occurs a fraction p(x) of the time.",
+      "Add the weighted costs to get average uncertainty."
+    ],
+    "formula": "H(X) = Eₚ[I(X)] = −Σₓ p(x) log₂ p(x)",
+    "example": "A fair coin averages 1 bit. A 90/10 coin averages about 0.469 bits: its rare outcome is surprising, but rare.",
+    "caveat": "This is discrete Shannon entropy. Differential entropy for continuous variables behaves differently and can be negative. Use 0 log 0 = 0.",
+    "origin": "Shannon (1948) asked how efficiently messages can be encoded. Entropy characterizes the asymptotic average lossless coding limit.",
+    "source": "https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf",
+    "visual": "entropy",
+    "check": "Can a rare event have high surprise while the whole distribution has low entropy?",
+    "answer": "Yes. Entropy weights that large surprise by the event’s small probability."
+  },
+  {
+    "id": "cross-entropy",
+    "title": "Cross-entropy",
+    "group": "Information",
+    "prerequisites": [
+      "entropy"
+    ],
+    "question": "What if your code is designed for the wrong probabilities?",
+    "intuition": "Keep drawing outcomes from reality P, but assign code lengths using your prediction Q.",
+    "steps": [
+      "Reality still supplies the weights p(x).",
+      "Your model supplies the surprise −log₂ q(x).",
+      "Average model surprise under reality."
+    ],
+    "formula": "H(P,Q) = −Σₓ p(x) log₂ q(x)",
+    "example": "If reality is 50/50 but Q predicts 90/10, the average cost is about 1.737 bits instead of 1.",
+    "caveat": "The first argument supplies the averaging distribution. Changing Q does not change H(P). Natural logs give nats rather than bits.",
+    "origin": "The coding view extends naturally to prediction: log loss charges a model for how surprised it is by what actually happens.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "mismatch",
+    "check": "Why is confident misclassification expensive?",
+    "answer": "It assigns tiny q to the observed class, making −log q very large."
+  },
+  {
+    "id": "kl-divergence",
+    "title": "KL divergence",
+    "group": "Information",
+    "prerequisites": [
+      "cross-entropy"
+    ],
+    "question": "How much extra cost comes only from using the wrong model?",
+    "intuition": "Subtract the uncertainty you cannot avoid from the cost of coding with Q. What remains is the mismatch penalty.",
+    "steps": [
+      "Cross-entropy is the total cost under Q.",
+      "Entropy is the ideal cost under P.",
+      "Subtract: the logarithms combine into a probability ratio."
+    ],
+    "formula": "Dₖₗ(P ‖ Q) = H(P,Q) − H(P) = Σₓ p(x) log₂[p(x)/q(x)]",
+    "example": "For P = (0.5,0.5), Q = (0.9,0.1): KL ≈ 0.737 bits. Reverse the arguments and it is ≈ 0.531 bits.",
+    "caveat": "KL is nonnegative but is not a distance metric: it is asymmetric. If p(x)>0 and q(x)=0, it is infinite.",
+    "origin": "Kullback and Leibler’s 1951 paper studied information for distinguishing statistical populations. The extra-code-length view gives a useful interpretation.",
+    "source": "https://doi.org/10.1214/aoms/1177729694",
+    "visual": "mismatch",
+    "check": "If Q becomes exactly P, does cross-entropy become zero?",
+    "answer": "No: KL becomes zero, while cross-entropy becomes H(P)."
+  },
+  {
+    "id": "joint-entropy",
+    "title": "Joint & conditional entropy",
+    "group": "Information",
+    "prerequisites": [
+      "entropy"
+    ],
+    "question": "How much uncertainty remains when you learn part of the story?",
+    "intuition": "Joint entropy describes a pair together. Conditional entropy averages the uncertainty about X after Y is known.",
+    "steps": [
+      "Encode Y first.",
+      "Then encode X with the distribution appropriate to that Y.",
+      "The two average costs add to the joint cost."
+    ],
+    "formula": "H(X,Y) = H(Y) + H(X|Y)",
+    "example": "If Y is an exact copy of a fair bit X, H(X,Y)=1 bit and H(X|Y)=0. Independent fair bits need 2 bits together.",
+    "caveat": "Conditional entropy averages over Y; it is not the entropy for just one chosen value y. “Multiple-entropy” is not a standard single term; joint entropy handles several variables.",
+    "origin": "Chain rules in information theory account for messages in parts and expose what can be saved by exploiting dependence.",
+    "source": "https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf",
+    "visual": "information",
+    "check": "Why do two copies of the same bit not carry two bits of information?",
+    "answer": "Once you know the first, the second adds no uncertainty or new information."
+  },
+  {
+    "id": "mutual-information",
+    "title": "Mutual information",
+    "group": "Information",
+    "prerequisites": [
+      "joint-entropy",
+      "kl-divergence"
+    ],
+    "question": "How much does knowing one variable tell you about another?",
+    "intuition": "Measure the uncertainty removed from X by observing Y. Equivalently, compare the real joint distribution with an independent one.",
+    "steps": [
+      "Start with uncertainty H(X).",
+      "Subtract the remaining uncertainty H(X|Y).",
+      "The saving is shared information, symmetric in X and Y."
+    ],
+    "formula": "I(X;Y) = H(X) − H(X|Y) = Dₖₗ(p(x,y) ‖ p(x)p(y))",
+    "example": "A fair bit and its copy share 1 bit. Independent fair bits share 0.",
+    "caveat": "Dependence does not imply causation. Continuous deterministic neural representations can make mutual-information estimation subtle or divergent.",
+    "origin": "Mutual information formalizes how a received signal reduces uncertainty about a transmitted one; it becomes a tool for studying representations.",
+    "source": "https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf",
+    "visual": "information",
+    "check": "Can independent variables each have high entropy but zero mutual information?",
+    "answer": "Yes. Each may be unpredictable without revealing anything about the other."
+  },
+  {
+    "id": "markov-chain",
+    "title": "Markov chains",
+    "group": "Information",
+    "prerequisites": [
+      "probability"
+    ],
+    "question": "How much history must a process remember?",
+    "intuition": "The present state can be a sufficient summary of the past for predicting the next state.",
+    "steps": [
+      "Choose a state description.",
+      "Give transition probabilities from each current state.",
+      "Repeatedly sample the next state using only the current one."
+    ],
+    "formula": "p(xₜ₊₁ | x₀,…,xₜ) = p(xₜ₊₁ | xₜ)",
+    "example": "A weather toy has sunny → sunny probability 0.8 and rainy → sunny probability 0.3. Tomorrow’s distribution follows from today’s state.",
+    "caveat": "Markov does not mean independent across time. Whether the assumption holds depends on what you include in the state.",
+    "origin": "Markov studied dependent sequences rather than only independent trials. Modern diffusion models use chains to add and remove noise.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "chain",
+    "check": "If tomorrow depends on today, can the process still be Markov?",
+    "answer": "Yes. It is dependence on earlier history beyond the current state that the Markov property excludes."
+  },
+  {
+    "id": "data-processing",
+    "title": "Data processing inequality",
+    "group": "Information",
+    "prerequisites": [
+      "markov-chain",
+      "mutual-information"
+    ],
+    "question": "Can processing recover information that has already disappeared?",
+    "intuition": "In a Markov chain X → T → Z, Z only sees X through T. It cannot learn distinctions that T erased.",
+    "steps": [
+      "T supplies everything Z can observe about X.",
+      "Any distinctions lost before T are unavailable downstream.",
+      "Therefore information about X cannot increase."
+    ],
+    "formula": "X → T → Z  ⇒  I(X;Z) ≤ I(X;T)",
+    "example": "If a photo is reduced to “contains an animal,” later processing cannot recover the animal’s original pixel colors from that bit alone.",
+    "caveat": "The Markov condition matters: a later stage receiving extra side information can gain information. Better prediction can still follow easier-to-use representations.",
+    "origin": "A central information-theory constraint explains why useful representation learning is about preserving and reorganizing information, not creating it about the original sample.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "chain",
+    "check": "Can a later layer classify better even though it cannot increase input information?",
+    "answer": "Yes. It can make the relevant information easier for a simple decision rule to use."
+  },
+  {
+    "id": "representation",
+    "title": "Representation learning",
+    "group": "Learning",
+    "prerequisites": [
+      "probability"
+    ],
+    "question": "Why should a model learn features instead of receiving them by hand?",
+    "intuition": "Change coordinates so that useful distinctions become easier to express. Hidden layers are learned descriptions of the input.",
+    "steps": [
+      "Raw inputs contain many entangled factors.",
+      "Transform them through learned layers.",
+      "Optimize the transformations for a task or learning signal."
+    ],
+    "formula": "T = fθ(X);  Ŷ = gφ(T)",
+    "example": "Pixels become edge-like patterns, then shapes or task-relevant features. This is an intuition, not a required hierarchy in every network.",
+    "caveat": "A representation can also encode shortcuts and nuisance variables. Good training accuracy does not prove useful features.",
+    "origin": "Learning features reduces dependence on manually engineered descriptions. The ATDL information-bottleneck notes ask which information these features retain.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "network",
+    "check": "Is a hidden representation necessarily a compressed vector?",
+    "answer": "No. It can have more coordinates than the input; compression can refer to information or description length instead."
+  },
+  {
+    "id": "information-bottleneck",
+    "title": "Information bottleneck",
+    "group": "Information",
+    "prerequisites": [
+      "mutual-information",
+      "representation"
+    ],
+    "question": "What should a representation forget?",
+    "intuition": "Keep what predicts Y while discarding other details of X. Compression has a purpose only relative to what you want to preserve.",
+    "steps": [
+      "Measure retained input information I(X;T).",
+      "Measure predictive information I(T;Y).",
+      "Penalize the first and reward the second."
+    ],
+    "formula": "minₚ₍ₜ|ₓ₎ I(X;T) − β I(T;Y)",
+    "example": "For classifying handwritten digits, pen color may be expendable while stroke shape is useful.",
+    "caveat": "The mathematical objective is distinct from the claim that ordinary SGD automatically solves it. Information estimates in deterministic networks require care.",
+    "origin": "Tishby, Pereira and Bialek (1999) formulated a compression–prediction trade-off using ideas from rate–distortion theory.",
+    "source": "https://arxiv.org/abs/physics/0004057",
+    "visual": "bottleneck",
+    "check": "What happens when β is increased?",
+    "answer": "Preserving predictive information receives more weight relative to compression."
+  },
+  {
+    "id": "information-plane",
+    "title": "Information plane",
+    "group": "Information",
+    "prerequisites": [
+      "information-bottleneck"
+    ],
+    "question": "How can we watch the information content of layers change?",
+    "intuition": "Place each layer at coordinates describing input information retained and target information retained.",
+    "steps": [
+      "Estimate I(X;T) for the horizontal axis.",
+      "Estimate I(T;Y) for the vertical axis.",
+      "Follow a layer’s estimated position during training."
+    ],
+    "formula": "T ↦ (I(X;T), I(T;Y))",
+    "example": "Moving up means more target information; moving left means less input information. Up and left is the desired IB direction when feasible.",
+    "caveat": "Trajectories depend on estimators, binning and architecture. The two-phase compression story is a research claim, not a universal law.",
+    "origin": "Shwartz-Ziv and Tishby (2017) used information-plane plots to interpret training. Saxe and colleagues later challenged the generality of the compression explanation.",
+    "source": "https://research.ibm.com/publications/on-the-information-bottleneck-theory-of-deep-learning--1",
+    "visual": "plane",
+    "check": "Does moving left alone prove learning improved?",
+    "answer": "No. It could mean throwing away predictive information too; check the vertical axis and held-out performance."
+  },
+  {
+    "id": "lagrange",
+    "title": "Lagrange multipliers",
+    "group": "Math",
+    "prerequisites": [
+      "probability"
+    ],
+    "question": "How can a constraint become part of an objective?",
+    "intuition": "Assign a price to violating a constraint. The multiplier expresses how much objective value you exchange for relaxing it.",
+    "steps": [
+      "Write an objective and constraint.",
+      "Add a multiplier times the constraint residual.",
+      "Solve the resulting stationarity and feasibility conditions."
+    ],
+    "formula": "ℒ(θ,λ) = f(θ) + λ(g(θ) − c)",
+    "example": "In IB, β acts as the relative price of losing predictive information: I(X;T) − βI(T;Y).",
+    "caveat": "A weighted objective and a constrained problem are not always interchangeable globally, especially in nonconvex settings.",
+    "origin": "Lagrange’s constrained-optimization method provides the mathematical language for many modern fit-versus-complexity trade-offs.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "tradeoff",
+    "check": "What does a large multiplier tell you intuitively?",
+    "answer": "The associated constraint or reward strongly influences the optimum; violating it is expensive."
+  },
+  {
+    "id": "erm",
+    "title": "Empirical risk minimization",
+    "group": "Learning",
+    "prerequisites": [
+      "probability",
+      "cross-entropy"
+    ],
+    "question": "How do we optimize performance when the true data distribution is unknown?",
+    "intuition": "Replace an inaccessible population average with an average over observed training examples.",
+    "steps": [
+      "Choose a loss that measures prediction error.",
+      "Average it on the sample.",
+      "Find parameters with low sample loss."
+    ],
+    "formula": "R̂(θ) = (1/n) Σᵢ ℓ(fθ(xᵢ), yᵢ)",
+    "example": "Minimizing average classification cross-entropy over your dataset is ERM.",
+    "caveat": "Low empirical risk is not necessarily low population risk. Reusing the test set for model selection defeats its purpose.",
+    "origin": "Statistical learning theory asks when fitting a finite sample also yields reliable predictions on new draws.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "fit",
+    "check": "Why is training loss called empirical?",
+    "answer": "It is measured on the observed sample instead of averaged over the unknown population."
+  },
+  {
+    "id": "gradient",
+    "title": "Gradients & backpropagation",
+    "group": "Math",
+    "prerequisites": [
+      "erm"
+    ],
+    "question": "Which small parameter changes will reduce the loss?",
+    "intuition": "A gradient reports local sensitivity to each parameter. Backpropagation computes these sensitivities efficiently by reusing the chain rule.",
+    "steps": [
+      "Run the network forward to compute loss.",
+      "Send sensitivities backward through each operation.",
+      "Combine them to obtain each parameter derivative."
+    ],
+    "formula": "∂L/∂w = (∂L/∂h)(∂h/∂w)",
+    "example": "If h=wx and L=h², then ∂L/∂w = 2hx. With w=2, x=3, the derivative is 36.",
+    "caveat": "Backpropagation computes a gradient; an optimizer decides how to use it. Local downhill motion does not guarantee a global minimum.",
+    "origin": "Reverse-mode differentiation made learning many parameters practical by sharing derivative computations through a graph.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "network",
+    "check": "Are backpropagation and gradient descent the same thing?",
+    "answer": "No. One computes derivatives; the other updates parameters using them."
+  },
+  {
+    "id": "sgd",
+    "title": "Stochastic gradient descent",
+    "group": "Learning",
+    "prerequisites": [
+      "gradient"
+    ],
+    "question": "Can we learn without inspecting every example before each update?",
+    "intuition": "A random mini-batch gives a cheaper, noisy estimate of the full training gradient.",
+    "steps": [
+      "Sample a mini-batch.",
+      "Average its loss gradients.",
+      "Step opposite the estimated gradient and repeat."
+    ],
+    "formula": "θₜ₊₁ = θₜ − η ĝₜ",
+    "example": "With gradient 2, parameter 3, and learning rate 0.1, the next parameter is 2.8.",
+    "caveat": "An unbiased gradient estimate requires appropriate sampling. Large steps can diverge, and noise alone does not guarantee generalization.",
+    "origin": "Stochastic approximation, including Robbins–Monro (1951), provided methods for finding solutions from noisy observations.",
+    "source": "https://doi.org/10.1214/aoms/1177729586",
+    "visual": "optimization",
+    "check": "Why can two mini-batches suggest different directions?",
+    "answer": "They contain different examples, so their gradient estimates fluctuate around the full-data gradient."
+  },
+  {
+    "id": "epoch",
+    "title": "Batches, steps & epochs",
+    "group": "Learning",
+    "prerequisites": [
+      "sgd"
+    ],
+    "question": "How much training has actually happened?",
+    "intuition": "A step updates parameters once. A batch supplies that update. An epoch is approximately one pass over the dataset.",
+    "steps": [
+      "Divide the dataset into batches.",
+      "Perform one update per batch.",
+      "Completing the pass counts as one epoch."
+    ],
+    "formula": "updates per epoch ≈ ⌈N / B⌉",
+    "example": "10,000 examples at batch size 1,000 give 10 updates per epoch.",
+    "caveat": "Dropping the last batch uses floor instead of ceiling. Streaming or replacement sampling needs an explicitly defined epoch convention.",
+    "origin": "These bookkeeping units emerged from iterative dataset training. They are essential when comparing compute and learning curves.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "batches",
+    "check": "If batch size doubles, do steps per epoch double?",
+    "answer": "They approximately halve, for a fixed dataset size."
+  },
+  {
+    "id": "snr",
+    "title": "Signal-to-noise ratio",
+    "group": "Learning",
+    "prerequisites": [
+      "sgd"
+    ],
+    "question": "Is a gradient mostly consistent direction or random fluctuation?",
+    "intuition": "Compare the magnitude of the mean gradient with variation across stochastic gradient estimates.",
+    "steps": [
+      "Collect gradients from batches.",
+      "Estimate their mean and variation.",
+      "Compare consistent motion with random spread."
+    ],
+    "formula": "one convention: SNR = ‖E[ĝ]‖ / √E[‖ĝ − E[ĝ]‖²]",
+    "example": "A mean gradient of magnitude 2 with RMS noise 0.5 has SNR 4 under this convention.",
+    "caveat": "SNR conventions differ, including squared ratios. Near a stationary point the mean may shrink even if noise also decreases.",
+    "origin": "Signal-versus-noise language comes from measurement and communication and helps describe stochastic training dynamics.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "optimization",
+    "check": "Can SNR fall without noise becoming larger?",
+    "answer": "Yes. The mean gradient may shrink while the noise stays similar."
+  },
+  {
+    "id": "stochastic-relaxation",
+    "title": "Stochastic relaxation",
+    "group": "Learning",
+    "prerequisites": [
+      "snr",
+      "information-plane"
+    ],
+    "question": "What can weights do after average downhill motion becomes weak?",
+    "intuition": "Batch-to-batch fluctuations can keep parameters moving among similarly low-loss configurations.",
+    "steps": [
+      "Early gradients may point consistently downhill.",
+      "Later the mean can become small relative to noise.",
+      "Model the resulting motion approximately as diffusion."
+    ],
+    "formula": "Δθ = −η E[ĝ] − η(ĝ − E[ĝ])",
+    "example": "Think of a walker in a shallow valley: weak drift along the floor, with random sideways kicks.",
+    "caveat": "The proposed link from this motion to information compression is paper-specific and disputed. SGD noise is generally neither constant nor isotropic.",
+    "origin": "The ATDL 2017 information-bottleneck paper interprets a later phase as diffusion-driven compression; subsequent work limits that interpretation.",
+    "source": "https://research.ibm.com/publications/on-the-information-bottleneck-theory-of-deep-learning--1",
+    "visual": "optimization",
+    "check": "Does noisy late training necessarily compress every neural network?",
+    "answer": "No. This is a hypothesis whose behavior depends on the model, data and information estimator."
+  },
+  {
+    "id": "regularization",
+    "title": "L1 & L2 regularization",
+    "group": "Learning",
+    "prerequisites": [
+      "erm",
+      "gradient"
+    ],
+    "question": "How do we discourage fitting every accidental detail?",
+    "intuition": "Add a cost for parameter choices you want the model to avoid. L1 favors sparsity; L2 shrinks weights smoothly.",
+    "steps": [
+      "Start with empirical loss.",
+      "Add a penalty scaled by λ.",
+      "Optimize the combined objective."
+    ],
+    "formula": "L1: R̂ + λΣ|wⱼ|;   L2: R̂ + λΣwⱼ²",
+    "example": "For weights (3,4), L1=7 and squared L2=25, before multiplying by λ.",
+    "caveat": "Exact L1 zeros depend on optimization; naive gradient updates may not produce them. Weight decay and L2 penalties differ for some adaptive optimizers.",
+    "origin": "Penalty methods encode preferences for simpler or more stable solutions; they connect to Bayesian priors and description length.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "regularization",
+    "check": "Which penalty keeps exerting a constant-magnitude pull toward zero away from zero?",
+    "answer": "L1. L2’s derivative scales with the weight magnitude."
+  },
+  {
+    "id": "mlp",
+    "title": "Multilayer perceptrons",
+    "group": "Learning",
+    "prerequisites": [
+      "representation",
+      "gradient"
+    ],
+    "question": "How do simple units compose a nonlinear predictor?",
+    "intuition": "Alternate linear mixing with nonlinear activations. Hidden layers let the model learn intermediate features.",
+    "steps": [
+      "Mix inputs with weights and biases.",
+      "Apply an activation separately to units.",
+      "Repeat, then produce a prediction."
+    ],
+    "formula": "hₗ₊₁ = σ(Wₗhₗ + bₗ)",
+    "example": "A two-layer network can combine simple threshold-like responses into a more complex decision boundary.",
+    "caveat": "Stacking only affine layers is still one affine transformation. Nonlinear activations are essential for nonlinear expressiveness.",
+    "origin": "Perceptron-style units became more expressive when composed in layers and trained through derivatives.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "network",
+    "check": "What happens if every activation is replaced by the identity?",
+    "answer": "The entire network collapses to one affine transformation, regardless of depth."
+  },
+  {
+    "id": "bnn",
+    "title": "Binarized neural networks",
+    "group": "Learning",
+    "prerequisites": [
+      "mlp"
+    ],
+    "question": "Can a network work with just two weight values?",
+    "intuition": "Use weights such as −1 and +1 to reduce representation and arithmetic costs and expose discrete structural patterns.",
+    "steps": [
+      "Maintain or optimize trainable parameters.",
+      "Binarize values used in the forward pass.",
+      "Use a gradient approximation to update trainable parameters."
+    ],
+    "formula": "wᵇ = sign(w)",
+    "example": "A 4×4 binary weight matrix can be displayed as a black-and-white tile and analyzed for repeated patterns.",
+    "caveat": "Here BNN means binarized, not Bayesian neural network. Actual speed and storage gains depend on kernels and training implementation.",
+    "origin": "The ATDL BNN paper uses discrete weight matrices to study whether training increases algorithmic structure.",
+    "source": "https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2026.1791546/full",
+    "visual": "binary",
+    "check": "Why are binary weights convenient for block decomposition?",
+    "answer": "They directly form discrete patterns that can be split into small blocks with estimated description lengths."
+  },
+  {
+    "id": "ste",
+    "title": "Straight-through estimator",
+    "group": "Learning",
+    "prerequisites": [
+      "bnn",
+      "gradient"
+    ],
+    "question": "How can learning pass through a discrete operation?",
+    "intuition": "Use the discrete operation forward, but substitute a useful derivative backward.",
+    "steps": [
+      "Compute sign(w) for the forward prediction.",
+      "Its true derivative is zero almost everywhere.",
+      "Replace that derivative with a surrogate during backpropagation."
+    ],
+    "formula": "forward: b=sign(w); backward example: ∂b/∂w ≈ 1{|w|≤1}",
+    "example": "A weight at 0.3 outputs +1, while a clipped-identity surrogate still lets its underlying real parameter receive a gradient.",
+    "caveat": "This is a biased gradient heuristic, not the exact derivative of the discrete objective. Surrogates differ.",
+    "origin": "Bengio and colleagues (2013) discussed estimating gradients through stochastic and discrete neurons.",
+    "source": "https://arxiv.org/abs/1308.3432",
+    "visual": "steps",
+    "check": "Is the STE the true derivative of sign?",
+    "answer": "No. It deliberately substitutes another derivative so optimization can proceed."
+  },
+  {
+    "id": "kolmogorov",
+    "title": "Kolmogorov–Chaitin complexity",
+    "group": "Complexity",
+    "prerequisites": [
+      "surprise"
+    ],
+    "question": "How long is the shortest recipe for an object?",
+    "intuition": "A pattern is simple if a short program can generate it, even when its symbol frequencies look random.",
+    "steps": [
+      "Fix a universal description language.",
+      "Consider programs that output the object and halt.",
+      "Take the length of the shortest one."
+    ],
+    "formula": "Kᵤ(x) = min{|p| : U(p)=x}",
+    "example": "“Repeat 01 fifty times” describes a 100-bit alternating string compactly, although its zero/one entropy is maximal.",
+    "caveat": "Exact Kolmogorov complexity is uncomputable in general and depends on the reference machine up to an additive constant.",
+    "origin": "Solomonoff, Kolmogorov and Chaitin developed algorithmic accounts of randomness and description length in the 1960s.",
+    "source": "https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2026.1791546/full",
+    "visual": "binary",
+    "check": "Why can Shannon symbol entropy miss structure?",
+    "answer": "It can see balanced symbol counts while ignoring a simple rule that determines their ordering."
+  },
+  {
+    "id": "algorithmic-probability",
+    "title": "Algorithmic probability",
+    "group": "Complexity",
+    "prerequisites": [
+      "kolmogorov",
+      "probability"
+    ],
+    "question": "Which outputs are likely when the input is a random program?",
+    "intuition": "Outputs with short descriptions receive substantial probability mass because short programs are easier to sample.",
+    "steps": [
+      "Use a prefix-free universal machine.",
+      "Weight each halting program by 2 to minus its length.",
+      "Sum weights of programs that output the same object."
+    ],
+    "formula": "mᵤ(x) = Σₚ:ᵁ⁽ᵖ⁾⁼ˣ 2⁻ˡᵉⁿ⁽ᵖ⁾;  Kᵤ(x) = −log₂mᵤ(x) + O(1)",
+    "example": "A 5-bit program contributes 1/32 probability mass; a 20-bit program contributes about one millionth.",
+    "caveat": "This is a semimeasure because some programs never halt. The coding theorem has an additive constant, not exact equality.",
+    "origin": "Algorithmic probability links induction to program length; the coding theorem connects probability with algorithmic complexity.",
+    "source": "https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2026.1791546/full",
+    "visual": "steps",
+    "check": "Why specify prefix-free programs?",
+    "answer": "They permit a valid probability weighting by length without ambiguously counting a program and its extensions."
+  },
+  {
+    "id": "ctm",
+    "title": "Coding theorem method",
+    "group": "Complexity",
+    "prerequisites": [
+      "algorithmic-probability"
+    ],
+    "question": "Can small program experiments approximate algorithmic complexity?",
+    "intuition": "Run a finite family of small machines and use output frequencies as an empirical proxy for algorithmic probability.",
+    "steps": [
+      "Enumerate a chosen finite machine space.",
+      "Run with a stated halting or time-limit convention and tally outputs.",
+      "Transform frequencies using −log₂."
+    ],
+    "formula": "CTM(x) = −log₂ Dₙ(x)",
+    "example": "An output appearing with frequency 1/8 gets a proxy value of 3 bits under that empirical distribution.",
+    "caveat": "Finite enumeration and runtime cutoffs are approximations. In the ATDL convention the machine count grows as (4n+2)^(2n), not 2 raised to output length.",
+    "origin": "CTM brings the coding-theorem idea to small computable tables, at the cost of severe enumeration limits.",
+    "source": "https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2026.1791546/full",
+    "visual": "steps",
+    "check": "Does CTM enumerate every program that could produce a chosen x?",
+    "answer": "No. It runs a finite chosen machine family first and then counts the outputs it observes."
+  },
+  {
+    "id": "bdm",
+    "title": "Block decomposition method",
+    "group": "Complexity",
+    "prerequisites": [
+      "ctm"
+    ],
+    "question": "How can small complexity tables say anything about a large matrix?",
+    "intuition": "Split a large object into small blocks, pay once for each distinct block, and add a cost for repetition counts.",
+    "steps": [
+      "Decompose into blocks supported by a CTM table.",
+      "Group identical blocks.",
+      "Sum estimated block complexity plus log₂ multiplicity."
+    ],
+    "formula": "BDM(X) ≈ Σ distinct r [CTM(r) + log₂ nᵣ]",
+    "example": "If the same block appears 8 times, its contribution is CTM(block)+3 rather than eight full CTM costs.",
+    "caveat": "Block size, boundary handling and lost long-range arrangement affect the estimate. BDM is not exact Kolmogorov complexity.",
+    "origin": "BDM extends small-output CTM estimates to larger discrete objects; the ATDL paper applies it to binary network weights.",
+    "source": "https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2026.1791546/full",
+    "visual": "binary",
+    "check": "What structure might BDM miss with very small blocks?",
+    "answer": "Dependencies and arrangement spanning several blocks can be lost."
+  },
+  {
+    "id": "mdl",
+    "title": "Minimum description length",
+    "group": "Complexity",
+    "prerequisites": [
+      "cross-entropy",
+      "kolmogorov"
+    ],
+    "question": "When does a more elaborate model earn its extra complexity?",
+    "intuition": "Pay for both the model and what the model leaves unexplained. A useful model saves more data-description bits than it costs.",
+    "steps": [
+      "Encode the model.",
+      "Encode the observations using that model.",
+      "Minimize their combined length."
+    ],
+    "formula": "L(total) = L(model) + L(data | model)",
+    "example": "Model A costs 10+100=110 bits; model B costs 30+60=90 bits. B wins despite being larger.",
+    "caveat": "MDL is a model-selection principle with specified codes, not the uncomputable shortest program definition of K(x).",
+    "origin": "Rissanen’s 1978 formulation connected statistical modeling to data compression.",
+    "source": "https://doi.org/10.1016/0005-1098(78)90005-5",
+    "visual": "tradeoff",
+    "check": "Does MDL always choose the smallest model?",
+    "answer": "No. A larger model can win by saving more bits when encoding the data."
+  },
+  {
+    "id": "pearson",
+    "title": "Pearson correlation",
+    "group": "Math",
+    "prerequisites": [
+      "probability"
+    ],
+    "question": "Do two quantities move together approximately linearly?",
+    "intuition": "Center both variables and measure how aligned their deviations are, normalized by their spread.",
+    "steps": [
+      "Subtract the mean from each variable.",
+      "Average products of deviations.",
+      "Divide by the product of standard deviations."
+    ],
+    "formula": "r = cov(X,Y) / (σₓσᵧ)",
+    "example": "[1,2,3,4] and [9,10,11,12] have r=1. A vertical shift does not alter linear alignment.",
+    "caveat": "Correlation is not causation, is sensitive to outliers, and is undefined if either variable is constant.",
+    "origin": "The ATDL complexity paper uses linear association to compare loss trajectories with complexity estimates.",
+    "source": "https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2026.1791546/full",
+    "visual": "scatter",
+    "check": "Does a higher correlation with loss prove better model accuracy?",
+    "answer": "No. It measures how closely two quantities vary together, not which trained model performs best."
+  },
+  {
+    "id": "spearman",
+    "title": "Spearman rank correlation",
+    "group": "Math",
+    "prerequisites": [
+      "pearson"
+    ],
+    "question": "Do two quantities preserve ordering, even on a curve?",
+    "intuition": "Replace values by ranks, then compute Pearson correlation on those ranks.",
+    "steps": [
+      "Rank each variable, averaging tied ranks.",
+      "Compare the paired ranks.",
+      "Strong monotonic agreement gives a value near 1."
+    ],
+    "formula": "ρ = corr(rank(X), rank(Y))",
+    "example": "[1,2,3,4] and [1,4,9,16] have ρ=1 even though the relation is quadratic.",
+    "caveat": "It detects monotonic association, not arbitrary dependence. Non-monotonic relationships can have low rank correlation.",
+    "origin": "Rank methods compare ordering without requiring a linear relation or identical scales.",
+    "source": "https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2026.1791546/full",
+    "visual": "scatter",
+    "check": "Can Spearman be 1 while Pearson is less than 1?",
+    "answer": "Yes: a strictly increasing nonlinear relationship preserves ranks without lying on a straight line."
+  },
+  {
+    "id": "bootstrap",
+    "title": "Bootstrap confidence intervals",
+    "group": "Math",
+    "prerequisites": [
+      "probability",
+      "pearson"
+    ],
+    "question": "How uncertain is an estimate when only a finite sample is available?",
+    "intuition": "Resample the observed independent units with replacement and see how much the statistic changes.",
+    "steps": [
+      "Draw a bootstrap sample of the same size with replacement.",
+      "Recompute the statistic; repeat many times.",
+      "Construct an interval using a stated bootstrap method."
+    ],
+    "formula": "percentile example: CI₉₅ = [q₀.₀₂₅(θ*), q₀.₉₇₅(θ*)]",
+    "example": "For a study with 30 independent training runs, resample runs—not individual time steps as though they were independent.",
+    "caveat": "A frequentist 95% procedure targets 95% coverage across repeated studies; it does not assign 95% probability to the fixed parameter in this one realized interval.",
+    "origin": "Efron’s bootstrap (1979) made resampling a practical route to sampling uncertainty. The ATDL paper uses resampled runs for correlation intervals.",
+    "source": "https://doi.org/10.1214/aos/1176344552",
+    "visual": "batches",
+    "check": "Why not independently resample every time step from one training curve?",
+    "answer": "Time steps are dependent; treating them as independent exaggerates the amount of information."
+  },
+  {
+    "id": "generalization",
+    "title": "Generalization & bias–variance",
+    "group": "Learning",
+    "prerequisites": [
+      "erm",
+      "regularization"
+    ],
+    "question": "Why can a perfect fit still predict badly?",
+    "intuition": "Training sees one finite sample. A model can fit sample-specific accidents instead of stable relationships.",
+    "steps": [
+      "Separate training and held-out observations.",
+      "Compare fit with out-of-sample error.",
+      "For squared error, separate systematic bias, sample variability and irreducible noise."
+    ],
+    "formula": "E[(Y−f̂(X))²] = noise + bias² + variance (under the usual regression assumptions)",
+    "example": "A very flexible curve may hit every training point but swing wildly between them.",
+    "caveat": "Bias–variance is a decomposition, not a theorem that variance must increase monotonically with parameter count.",
+    "origin": "Classical learning theory formalized the difference between fitting observations and predicting fresh samples; ATDL examines how deep networks complicate simple capacity stories.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "fit",
+    "check": "What does a widening training–test gap suggest?",
+    "answer": "The model is improving on its observed sample without equivalent improvement on new data."
+  },
+  {
+    "id": "bayes",
+    "title": "Bayesian inference & evidence",
+    "group": "Learning",
+    "prerequisites": [
+      "probability",
+      "cross-entropy"
+    ],
+    "question": "How should observations update uncertainty about a model?",
+    "intuition": "Multiply prior plausibility by the likelihood of the observations, then normalize. Evidence averages fit across the prior’s possibilities.",
+    "steps": [
+      "Choose a prior p(θ).",
+      "Evaluate likelihood p(D|θ).",
+      "Normalize their product by p(D) to obtain the posterior."
+    ],
+    "formula": "p(θ|D) = p(D|θ)p(θ)/p(D);  p(D)=∫p(D|θ)p(θ)dθ",
+    "example": "A model with one tiny region of excellent fit need not have high evidence if most of its prior mass predicts poorly.",
+    "caveat": "MAP selects one posterior mode; evidence integrates over parameters. SGD is not generally an exact posterior sampler.",
+    "origin": "Bayesian inference turns learning into probability updating. ATDL connects evidence and local loss geometry with optimization.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "distribution",
+    "check": "Is evidence simply the maximum likelihood achieved by a model?",
+    "answer": "No. It averages likelihood under the prior rather than taking its maximum."
+  },
+  {
+    "id": "pac-bayes",
+    "title": "PAC–Bayes bounds",
+    "group": "Learning",
+    "prerequisites": [
+      "bayes",
+      "kl-divergence",
+      "generalization"
+    ],
+    "question": "Can we bound unseen error even with many more weights than examples?",
+    "intuition": "Bound the expected risk of a distribution Q over predictors using training risk and its divergence from a data-independent prior P.",
+    "steps": [
+      "Fix a valid prior before observing the training sample.",
+      "Learn a distribution Q with low empirical risk.",
+      "Pay a confidence and KL-dependent complexity term."
+    ],
+    "formula": "schematic: true risk ≲ empirical risk + √[(KL(Q‖P)+confidence term)/n]",
+    "example": "A bound of 0.2 on an error rate is informative; a bound above 1 is vacuous because an error rate is already at most 1.",
+    "caveat": "The display is schematic, not a plug-in theorem. Exact bounds require specified loss range, sampling assumptions, constants and confidence level.",
+    "origin": "Dziugaite and Roy (2017) computed nonvacuous PAC–Bayes bounds for overparameterized stochastic neural networks.",
+    "source": "https://arxiv.org/abs/1703.11008",
+    "visual": "tradeoff",
+    "check": "Why can’t a standard prior be freely fitted to the same sample?",
+    "answer": "The theorem’s independence requirement would fail; data-dependent priors need a valid adjusted construction."
+  },
+  {
+    "id": "double-descent",
+    "title": "Double descent",
+    "group": "Learning",
+    "prerequisites": [
+      "generalization"
+    ],
+    "question": "Why can test error improve again after a model can fit everything?",
+    "intuition": "Test error can rise near the interpolation threshold and then fall as capacity grows further.",
+    "steps": [
+      "At low capacity the model underfits.",
+      "Near interpolation, fitting all points can be unstable.",
+      "Farther beyond it, the selected solution can generalize better again."
+    ],
+    "formula": "interpolation threshold: training error first reaches ≈ 0",
+    "example": "A model-size sweep can produce a decline, a peak near interpolation, and a second decline in test error.",
+    "caveat": "It is a phenomenon seen in particular settings, not a promise that making any model bigger improves it. Regularization and noise can change the curve.",
+    "origin": "Nakkiran and colleagues extended double-descent observations to deep networks and effective capacity, including training duration.",
+    "source": "https://arxiv.org/abs/1912.02292",
+    "visual": "double",
+    "check": "Why doesn’t double descent contradict the bias–variance identity?",
+    "answer": "The identity does not require either component to vary monotonically with parameter count."
+  },
+  {
+    "id": "grokking",
+    "title": "Grokking",
+    "group": "Learning",
+    "prerequisites": [
+      "generalization",
+      "representation"
+    ],
+    "question": "Can generalization arrive long after memorization?",
+    "intuition": "In some tasks, training accuracy saturates early while test accuracy improves only after much more optimization.",
+    "steps": [
+      "First fit the observed examples.",
+      "Continue optimization with the chosen training setup.",
+      "A more general rule may eventually become dominant."
+    ],
+    "formula": "time to fit training data ≪ time to generalize (in a grokking regime)",
+    "example": "On modular arithmetic, a network may memorize observed pairs before acquiring a rule that works on unseen pairs.",
+    "caveat": "Grokking is task- and setup-dependent. Continued training does not guarantee it; monitor held-out data without selecting on the final test set.",
+    "origin": "The ATDL Liu et al. paper studies an effective theory of representation learning to explain delayed generalization.",
+    "source": "vault:topic 1/T1_5_Liu2022UnderstandGrokking.pdf",
+    "visual": "grokking",
+    "check": "What distinguishes grokking from ordinary fast learning?",
+    "answer": "A substantial delay separates near-perfect training performance from improved unseen-data performance."
+  },
+  {
+    "id": "momos",
+    "title": "Mosaic-of-Motifs",
+    "group": "Complexity",
+    "prerequisites": [
+      "bdm",
+      "regularization"
+    ],
+    "question": "Can we encourage weight matrices to reuse a small vocabulary of patterns?",
+    "intuition": "Represent a matrix as small motifs plus a map saying which motif each block uses.",
+    "steps": [
+      "Split the weights into blocks.",
+      "Choose a small motif bank.",
+      "Assign blocks to motifs and reconstruct structured weights."
+    ],
+    "formula": "description ≈ motif-bank cost + assignment-map cost",
+    "example": "A matrix with 100 blocks chosen from 4 motifs can reuse those motifs instead of storing 100 unrelated blocks.",
+    "caveat": "Motif number and block size restrict capacity. Reduced description length does not by itself guarantee accuracy or measured hardware speed.",
+    "origin": "The ATDL MoMos lecture motivates algorithmic simplification as a structured parameterization, with projection toward motif reuse.",
+    "source": "vault:slides/3_atdl_momos_pedram.pdf",
+    "visual": "binary",
+    "check": "What changes when the motif bank becomes larger?",
+    "answer": "Capacity and storage cost can increase because blocks have more distinct patterns available."
+  },
+  {
+    "id": "likelihood",
+    "title": "Likelihood & generative modeling",
+    "group": "Generation",
+    "prerequisites": [
+      "probability",
+      "cross-entropy"
+    ],
+    "question": "Can a model learn what data looks like, rather than only its label?",
+    "intuition": "A generative model describes a distribution over observations, often through hidden variables or a sampling procedure.",
+    "steps": [
+      "Choose a family of distributions or samplers.",
+      "Fit it using observations.",
+      "Draw new samples or evaluate predictions under the learned model."
+    ],
+    "formula": "maxθ Σᵢ log pθ(xᵢ)  ⇔  minθ average negative log-likelihood",
+    "example": "A model of handwritten digits learns a distribution over digit images, allowing it to generate new ones.",
+    "caveat": "Not every generative model exposes a tractable likelihood. High likelihood and perceptual quality need not rank models identically.",
+    "origin": "Generative modeling extends density estimation to rich structured data. ATDL topic 2 compares several ways to represent and train these distributions.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "distribution",
+    "check": "What is the relation between likelihood training and cross-entropy?",
+    "answer": "Average negative log-likelihood is empirical cross-entropy under the model distribution."
+  },
+  {
+    "id": "latent",
+    "title": "Latent variables",
+    "group": "Generation",
+    "prerequisites": [
+      "likelihood"
+    ],
+    "question": "How can hidden causes make complicated observations easier to model?",
+    "intuition": "Introduce unobserved variables that describe factors behind the data, then generate observations conditional on them.",
+    "steps": [
+      "Sample a hidden variable z from a prior.",
+      "Generate x using pθ(x|z).",
+      "Integrate out z to describe the observed-data distribution."
+    ],
+    "formula": "pθ(x) = ∫pθ(x|z)p(z)dz",
+    "example": "A low-dimensional z might control digit shape and stroke thickness before a decoder produces pixels.",
+    "caveat": "Learned latent coordinates are not automatically interpretable or disentangled; multiple latent descriptions can explain the same data.",
+    "origin": "Latent-variable models separate hidden structure from observed variation. Neural decoders make that structure highly flexible.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "network",
+    "check": "Is a latent variable necessarily a class label?",
+    "answer": "No. It can be continuous, discrete, multidimensional, or unrelated to human labels."
+  },
+  {
+    "id": "vae",
+    "title": "Variational autoencoders & ELBO",
+    "group": "Generation",
+    "prerequisites": [
+      "latent",
+      "kl-divergence",
+      "bayes"
+    ],
+    "question": "How do we train a latent model when the true posterior is intractable?",
+    "intuition": "Learn an approximate posterior and maximize a tractable lower bound on log-likelihood.",
+    "steps": [
+      "Use qφ(z|x) to infer likely latent causes.",
+      "Reward reconstruction under the decoder.",
+      "Penalize divergence from the latent prior."
+    ],
+    "formula": "ELBO = E_q[log pθ(x|z)] − KL(qφ(z|x) ‖ p(z)) ≤ log pθ(x)",
+    "example": "An encoder produces Gaussian mean and scale; z=μ+σε lets reconstruction gradients reach those parameters.",
+    "caveat": "The KL term here compares a per-example latent posterior with its prior, not the data distribution directly. Too strong a penalty can cause posterior collapse.",
+    "origin": "Kingma and Welling’s Auto-Encoding Variational Bayes (2013) made neural variational inference practical with reparameterized gradients.",
+    "source": "https://arxiv.org/abs/1312.6114",
+    "visual": "vae",
+    "check": "Why is the ELBO only a lower bound?",
+    "answer": "Its gap to log pθ(x) is KL(qφ(z|x) ‖ pθ(z|x)), which is nonnegative."
+  },
+  {
+    "id": "gan",
+    "title": "Generative adversarial networks",
+    "group": "Generation",
+    "prerequisites": [
+      "latent",
+      "gradient"
+    ],
+    "question": "Can a model learn to generate without evaluating its own density?",
+    "intuition": "A generator makes examples while a discriminator learns to distinguish generated examples from real ones.",
+    "steps": [
+      "Generate samples from noise.",
+      "Train a discriminator using real and generated data.",
+      "Train the generator to improve against that discriminator."
+    ],
+    "formula": "min_G max_D E_data[log D(x)] + E_z[log(1−D(G(z)))]",
+    "example": "A discriminator notices missing stroke patterns; its feedback changes the generator toward more plausible digits.",
+    "caveat": "This is the original minimax objective; practical losses differ. Training can be unstable and can omit modes of the data distribution.",
+    "origin": "Goodfellow and colleagues (2014) introduced adversarial training as a way to learn a generative model through a learned critic.",
+    "source": "https://arxiv.org/abs/1406.2661",
+    "visual": "gan",
+    "check": "What is mode collapse?",
+    "answer": "The generator produces too little diversity, repeatedly covering only some kinds of real examples."
+  },
+  {
+    "id": "normalizing-flow",
+    "title": "Normalizing flows",
+    "group": "Generation",
+    "prerequisites": [
+      "latent",
+      "gradient"
+    ],
+    "question": "Can a complex density come from a reversible transformation?",
+    "intuition": "Transform a simple distribution through invertible maps while tracking how volumes change.",
+    "steps": [
+      "Sample z from a simple base distribution.",
+      "Apply invertible x=f(z).",
+      "Correct density by the transformation’s Jacobian determinant."
+    ],
+    "formula": "log p_X(x) = log p_Z(f⁻¹(x)) + log |det J_f⁻¹(x)|",
+    "example": "Stretching a one-dimensional interval to twice its length halves its density.",
+    "caveat": "Invertibility and tractable Jacobians constrain architectures. Continuous flows replace finite maps with differential equations.",
+    "origin": "The change-of-variables rule provides the basis for flow-based density models; learned transforms give flexible distributions.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "flow",
+    "check": "Why does a density need a volume correction?",
+    "answer": "Probability mass stays the same when coordinates stretch, so density per unit volume must change."
+  },
+  {
+    "id": "diffusion",
+    "title": "Diffusion / DDPM",
+    "group": "Generation",
+    "prerequisites": [
+      "markov-chain",
+      "likelihood"
+    ],
+    "question": "Can generating a complex image be broken into simple denoising decisions?",
+    "intuition": "Gradually corrupt data with known noise, then learn how to reverse the corruption.",
+    "steps": [
+      "Choose a forward Gaussian noising schedule.",
+      "Train a network to predict injected noise or an equivalent target.",
+      "Start from noise and apply learned reverse steps."
+    ],
+    "formula": "xₜ = √ᾱₜ x₀ + √(1−ᾱₜ) ε,   ε ~ N(0,I)",
+    "example": "Early noisy digits retain shape; at high noise the input nearly loses its identity. A denoiser learns across these noise levels.",
+    "caveat": "Reverse generation is not simply subtracting the exact sampled training noise. Standard sampling uses a learned conditional reverse process.",
+    "origin": "DDPM (Ho et al., 2020) made high-quality generation practical with a simple noise-prediction objective, building on earlier diffusion modeling.",
+    "source": "https://arxiv.org/abs/2006.11239",
+    "visual": "diffusion",
+    "check": "Why can we form a noisy training example without simulating every previous step?",
+    "answer": "The Gaussian forward chain has a closed-form marginal at each chosen time t."
+  },
+  {
+    "id": "score",
+    "title": "Score matching",
+    "group": "Generation",
+    "prerequisites": [
+      "diffusion",
+      "gradient"
+    ],
+    "question": "Which direction leads toward more probable data?",
+    "intuition": "The score is the gradient of log density with respect to the sample, not the model weights.",
+    "steps": [
+      "Take log p(x).",
+      "Differentiate with respect to x.",
+      "Learn this vector field, often using noisy data and denoising targets."
+    ],
+    "formula": "s(x) = ∇ₓ log p(x)",
+    "example": "For a standard Gaussian, s(x)=−x: the score points toward the high-density center.",
+    "caveat": "Following the score deterministically to a mode is not the same as sampling the distribution. Sampling requires an appropriate dynamics or probability-flow construction.",
+    "origin": "Score matching avoids needing the normalizing constant of a density; noise-conditioned scores connect it to modern diffusion samplers.",
+    "source": "https://jmlr.org/papers/v6/hyvarinen05a.html",
+    "visual": "flow",
+    "check": "What variable is differentiated in the score?",
+    "answer": "The data coordinate x. A training gradient usually differentiates loss with respect to parameters θ."
+  },
+  {
+    "id": "ode",
+    "title": "ODEs & numerical sampling",
+    "group": "Math",
+    "prerequisites": [
+      "gradient"
+    ],
+    "question": "How can local velocity define an entire trajectory?",
+    "intuition": "An ordinary differential equation gives the direction and speed of motion at every state and time.",
+    "steps": [
+      "Specify an initial state.",
+      "Evaluate the velocity field.",
+      "Integrate it over time, approximating with finite steps in a computer."
+    ],
+    "formula": "dx/dt = v(x,t);  Euler: xₜ₊Δₜ ≈ xₜ + Δt v(xₜ,t)",
+    "example": "For dx/dt=−x, a step of 0.1 moves x=1 to 0.9 by Euler; the exact value is exp(−0.1)≈0.9048.",
+    "caveat": "Large steps can introduce error or instability. Existence and uniqueness need conditions on the field.",
+    "origin": "Differential equations describe motion through local rules. Generative flows use the same machinery to transport random samples.",
+    "source": "https://udlbook.github.io/udlbook/",
+    "visual": "flow",
+    "check": "Why can fewer sampling steps reduce quality?",
+    "answer": "A coarse numerical approximation may poorly track the learned trajectory."
+  },
+  {
+    "id": "flow-matching",
+    "title": "Flow matching & rectified flow",
+    "group": "Generation",
+    "prerequisites": [
+      "ode",
+      "latent"
+    ],
+    "question": "Can we directly learn the velocity that transports noise into data?",
+    "intuition": "Choose a probability path between easy noise and real examples, then regress a velocity field along it.",
+    "steps": [
+      "Draw noise x₀ and data x₁.",
+      "On a straight conditional path set xₜ=(1−t)x₀+tx₁.",
+      "Regress vθ(xₜ,t) toward x₁−x₀, then integrate from noise."
+    ],
+    "formula": "L = E[‖vθ(xₜ,t) − (x₁−x₀)‖²]",
+    "example": "For x₀=−2 and x₁=3, a conditional straight path has constant target velocity 5.",
+    "caveat": "Straight conditional training paths do not guarantee straight learned marginal trajectories. Pairing, objectives and reflow procedures distinguish specific methods.",
+    "origin": "Flow matching and rectified flow developed closely related velocity-learning approaches. Lipman et al. (2022) frame flow matching through probability paths.",
+    "source": "https://arxiv.org/abs/2210.02747",
+    "visual": "flow",
+    "check": "Is the learned velocity necessarily the displacement of one specific paired example?",
+    "answer": "No. Regression averages compatible conditional targets at a state and time."
+  },
+  {
+    "id": "guidance",
+    "title": "Conditioning & classifier-free guidance",
+    "group": "Generation",
+    "prerequisites": [
+      "diffusion"
+    ],
+    "question": "How can a generator follow a prompt more strongly?",
+    "intuition": "Condition predictions on text or labels, then optionally amplify the difference between conditional and unconditional predictions.",
+    "steps": [
+      "Train with and without conditioning.",
+      "Compute both predictions at the same noisy state.",
+      "Extrapolate toward the conditional prediction."
+    ],
+    "formula": "ε_guided = ε_uncond + s(ε_cond − ε_uncond)",
+    "example": "s=1 gives the conditional prediction under this convention; s>1 amplifies conditioning.",
+    "caveat": "Large guidance can reduce diversity and create artifacts. Some papers use an offset convention for the scale.",
+    "origin": "Classifier-free guidance removes the need for a separate noisy-image classifier when steering diffusion models.",
+    "source": "https://arxiv.org/abs/2207.12598",
+    "visual": "steps",
+    "check": "Under this convention, what does s=0 produce?",
+    "answer": "The unconditional prediction."
+  },
+  {
+    "id": "attention",
+    "title": "Attention & transformers",
+    "group": "Learning",
+    "prerequisites": [
+      "mlp",
+      "representation"
+    ],
+    "question": "How can each token decide which other tokens matter?",
+    "intuition": "Compare a query with keys to assign weights, then mix the corresponding values.",
+    "steps": [
+      "Project tokens into queries, keys and values.",
+      "Normalize query–key similarities with softmax.",
+      "Use the weights to average value vectors."
+    ],
+    "formula": "Attention(Q,K,V) = softmax(QKᵀ/√dₖ)V",
+    "example": "An image patch can attend to nearby edges or a text token naming the object it should depict.",
+    "caveat": "Attention weights are not automatically causal explanations. Self-attention and cross-attention differ in where queries and keys/values come from.",
+    "origin": "The Transformer (Vaswani et al., 2017) organized sequence modeling around attention; diffusion transformers apply related blocks to image patches.",
+    "source": "https://arxiv.org/abs/1706.03762",
+    "visual": "attention",
+    "check": "In cross-attention, must queries and keys come from the same input?",
+    "answer": "No. Image features may supply queries while text supplies keys and values."
+  },
+  {
+    "id": "latent-diffusion",
+    "title": "Latent diffusion & diffusion transformers",
+    "group": "Generation",
+    "prerequisites": [
+      "diffusion",
+      "latent",
+      "attention"
+    ],
+    "question": "Can we denoise a compact representation instead of every pixel?",
+    "intuition": "An autoencoder compresses images into latents. A denoising model operates there, often with a transformer over latent patches.",
+    "steps": [
+      "Encode an image to a latent representation.",
+      "Learn diffusion or flow dynamics in that space.",
+      "Decode the generated latent back to pixels."
+    ],
+    "formula": "x → encoder → z;   noise → latent denoiser → ẑ → decoder → x̂",
+    "example": "A compressed spatial grid reduces the number of locations the generative model must process.",
+    "caveat": "Compression can lose detail. “Latent diffusion” names the working space; “diffusion transformer” names an architecture, and does not by itself fix the training objective.",
+    "origin": "Latent diffusion (Rombach et al., 2022) reduced generative computation; DiT studied scalable transformer backbones for diffusion.",
+    "source": "https://arxiv.org/abs/2112.10752",
+    "visual": "vae",
+    "check": "Can a diffusion transformer operate in a latent space?",
+    "answer": "Yes. The architecture and the representation space are separate design choices."
+  },
+  {
+    "id": "distillation",
+    "title": "Distillation, consistency & mean velocity",
+    "group": "Generation",
+    "prerequisites": [
+      "flow-matching",
+      "diffusion"
+    ],
+    "question": "Can a slow generator teach a faster one?",
+    "intuition": "Train a model to replace several small generative steps with a larger jump, an endpoint prediction, or an interval-average velocity.",
+    "steps": [
+      "Identify the trajectory information needed for a large step.",
+      "Train a compatible student or self-consistency objective.",
+      "Sample using fewer evaluations."
+    ],
+    "formula": "average velocity u = (xₜ − xᵣ)/(t−r), for t ≠ r",
+    "example": "Instead of asking “which way now?”, ask “what displacement takes me across this whole time interval?”",
+    "caveat": "These are related motivations, not identical algorithms. MeanFlow can train without a pretrained teacher; consistency models need boundary and consistency conditions.",
+    "origin": "ATDL topic 2 includes Mean Flows, motivating the distinction between instantaneous and interval-level prediction. The lecture also introduces consistency models.",
+    "source": "https://arxiv.org/abs/2505.13447",
+    "visual": "flow",
+    "check": "Is average velocity always equal to instantaneous velocity at the interval start?",
+    "answer": "No. They coincide for a constant-velocity path, but generally differ on curved or changing-speed trajectories."
+  },
+  {
+    "id": "generation-metrics",
+    "title": "Evaluating generated samples",
+    "group": "Generation",
+    "prerequisites": [
+      "probability",
+      "likelihood"
+    ],
+    "question": "How do we compare generators beyond a few attractive examples?",
+    "intuition": "Compare quality, diversity and alignment on a sufficiently large, consistently evaluated sample.",
+    "steps": [
+      "Choose features suited to the domain.",
+      "Compare real and generated sample distributions.",
+      "Report protocol, sample size and complementary checks."
+    ],
+    "formula": "FID compares Gaussian fits to feature means and covariances",
+    "example": "Two generators may have similar visual sharpness while one repeatedly generates the same few images.",
+    "caveat": "FID is sample- and feature-dependent; it is not a universal measure of quality. CLIP-based metrics add their own representation biases.",
+    "origin": "The ATDL generative-model lecture includes FID, Inception Score and CMMD to make evaluation more systematic than inspecting selected images.",
+    "source": "vault:slides/4-5_ATDL GM Lecture 2.pdf",
+    "visual": "distribution",
+    "check": "Why is a hand-picked gallery insufficient evidence of generator quality?",
+    "answer": "It can hide failures and missing diversity; evaluation needs a representative sampling protocol."
+  },
+  {
+    "id": "counterfactual",
+    "title": "Counterfactual explanations",
+    "group": "Learning",
+    "prerequisites": [
+      "guidance",
+      "generalization"
+    ],
+    "question": "What plausible change would make a classifier decide differently?",
+    "intuition": "Construct a nearby alternative input that changes the prediction while preserving unrelated properties.",
+    "steps": [
+      "Start with a classified example.",
+      "Search for a plausible modification toward a target class.",
+      "Check that the prediction changes and inspect what else changed."
+    ],
+    "formula": "desired change = prediction flip + plausibility + limited modification",
+    "example": "An image edit might change a smile while preserving identity; comparing the classifier outputs probes its behavior.",
+    "caveat": "A model counterfactual is not automatically a real-world causal intervention. A generator may introduce unrelated changes or exploit classifier shortcuts.",
+    "origin": "DiME uses guided diffusion to produce counterfactual images and evaluates how explanations expose spurious correlations.",
+    "source": "vault:topic 2/T2_3_DiME.pdf",
+    "visual": "gan",
+    "check": "Why is a tiny adversarial perturbation not necessarily a useful counterfactual explanation?",
+    "answer": "It may flip the label without representing a human-understandable, plausible change."
+  },
+  {
+    "id": "repa",
+    "title": "Representation alignment / REPA",
+    "group": "Generation",
+    "prerequisites": [
+      "representation",
+      "latent-diffusion"
+    ],
+    "question": "Must a generative model discover useful visual features from scratch?",
+    "intuition": "Use representations from a pretrained visual encoder as an additional learning target for the denoiser’s hidden states.",
+    "steps": [
+      "Encode a clean image with a pretrained visual model.",
+      "Project a noisy-input denoiser’s hidden features into a compatible space.",
+      "Train with alignment alongside the generative objective."
+    ],
+    "formula": "L = L_generation + λ L_alignment",
+    "example": "A noisy-image hidden representation learns to agree with semantic features computed from the clean image.",
+    "caveat": "This transfers a representation preference, not proof that every borrowed feature is useful. Encoder, projection and layer choices matter.",
+    "origin": "The REPA paper identifies representation learning as a generative-training bottleneck and tests external-feature alignment as a remedy.",
+    "source": "vault:topic 2/T2_1_REPA.pdf",
+    "visual": "network",
+    "check": "Does REPA replace the generative training objective?",
+    "answer": "No. Alignment supplies an additional learning signal alongside generation."
+  },
+  {
+    "id": "joint-generation",
+    "title": "Joint image–mask modeling",
+    "group": "Generation",
+    "prerequisites": [
+      "joint-entropy",
+      "diffusion"
+    ],
+    "question": "Can segmentation be learned as a relationship inside a joint model?",
+    "intuition": "Model images and masks together, then use the observed image to guide generation of a compatible pair.",
+    "steps": [
+      "Represent training image–mask pairs jointly.",
+      "Learn their shared generative distribution.",
+      "At test time guide toward the observed image and recover its corresponding mask."
+    ],
+    "formula": "joint p(image, mask) → infer a compatible mask for an observed image",
+    "example": "DiffAtlas learns anatomical image–mask relationships rather than only a direct image-to-mask mapping.",
+    "caveat": "Guided joint sampling is not automatically exact conditional inference. Domain-shift performance is an empirical result, not a guarantee.",
+    "origin": "DiffAtlas reinterprets atlas-style segmentation using joint image–mask diffusion, studying limited-data and cross-modality settings.",
+    "source": "https://arxiv.org/abs/2503.06748",
+    "visual": "vae",
+    "check": "What is the central difference from a plain discriminative segmenter?",
+    "answer": "The joint model learns a distribution over both images and masks, rather than only a direct input-to-mask prediction."
+  },
+  {
+    "id": "image-editing",
+    "title": "In-context image editing",
+    "group": "Generation",
+    "prerequisites": [
+      "attention",
+      "flow-matching",
+      "latent-diffusion"
+    ],
+    "question": "How can a generator change an image while remembering what should stay?",
+    "intuition": "Provide source-image context together with an instruction, so the model can generate a changed view while retaining relevant identity and structure.",
+    "steps": [
+      "Encode source-image context and the edit instruction.",
+      "Let the generative model attend to that context.",
+      "Generate the target representation and decode the edited image."
+    ],
+    "formula": "context image + instruction + generative state → edited image",
+    "example": "“Make the jacket blue” should alter jacket color while preserving the person and scene.",
+    "caveat": "Consistency across repeated edits is measured, not guaranteed. Semantic similarity and precise reconstruction are different demands.",
+    "origin": "FLUX.1 Kontext uses concatenated context sequences for latent flow-based editing. Qwen-Image distinguishes semantic and reconstructive source-image encodings.",
+    "source": "https://arxiv.org/abs/2506.15742",
+    "visual": "attention",
+    "check": "Why might a semantic representation alone fail to preserve exact appearance?",
+    "answer": "It can retain what an object is while discarding fine spatial or visual details needed for reconstruction."
+  }
+]

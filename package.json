@@ -1,0 +1,17 @@
+{
+  "name": "ai-concepts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "python -m http.server 4173 --directory public",
+    "test": "node --test test/math.test.js",
+    "check": "node scripts/check.mjs",
+    "test:browser": "playwright test",
+    "vault:scan": "sudo -n python scripts/scan-vault.py"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "lz-string": "^1.5.0"
+  }
+}

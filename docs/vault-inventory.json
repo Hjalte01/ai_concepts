@@ -1,0 +1,157 @@
+[
+  {
+    "path": "Notes.md",
+    "sha256": "eac3efe9c660c7d23dd462e4688d3b38a1afd1e83810a05083e966adb09a4246",
+    "bytes": 3233
+  },
+  {
+    "path": "overview/Deep Learning is Not So Mysterious or Different.pdf",
+    "sha256": "ed980e43235fdb036cdfbdee31a6287f527aad1a54d003a4ca00d8f585b4a539",
+    "bytes": 1389756
+  },
+  {
+    "path": "overview/Machine Learning The Science of Selection under Uncertainty.pdf",
+    "sha256": "79a8ec3efd554d6252ba17b681b82b7e47ef18ec66732b04134bc10d0d33bb36",
+    "bytes": 3573550
+  },
+  {
+    "path": "overview/Machine Learning_The Science of Selection under Uncertainty",
+    "sha256": "79a8ec3efd554d6252ba17b681b82b7e47ef18ec66732b04134bc10d0d33bb36",
+    "bytes": 3573550
+  },
+  {
+    "path": "overview/Principles and Practice of Deep Representation Learning.pdf",
+    "sha256": "e61ca87bd97a702638e9e7264ac38c95ca5759af3412637b2993113ffae6571e",
+    "bytes": 137568865
+  },
+  {
+    "path": "overview/Understanding Deep Learning -- Simon J_D_ Prince -- 1, 2024 -- dbf7181bacefb36ab8cc009157d8cc3c -- Anna\u2019s Archive.pdf",
+    "sha256": "8a107732419052818773169fb348e0128b2d234db952f4c62a1711a5cab02c5f",
+    "bytes": 22623816
+  },
+  {
+    "path": "slides/1_T1L1_raghav.pdf",
+    "sha256": "1e880e0605e6fc679abe98166c803b003bad754e0862a49b657a6a005aa8556c",
+    "bytes": 2330002
+  },
+  {
+    "path": "slides/2_T1L2_raghav.pdf",
+    "sha256": "a766100dcfccf4728a37d98698116bbee8d1c1ac84f0ac8e43d03d0f87a105c8",
+    "bytes": 2076941
+  },
+  {
+    "path": "slides/3_atdl_momos_pedram.pdf",
+    "sha256": "038664c8295960724630a00ad7fe0ba58c5abca2f8a87e3d00798a7a0c16af00",
+    "bytes": 1723450
+  },
+  {
+    "path": "slides/4-5_ATDL GM Lecture 2.pdf",
+    "sha256": "26d6e8fbe615c4101932f536b74283160fab34cdf2e7eac2ed649f065e04cb20",
+    "bytes": 3892970
+  },
+  {
+    "path": "topic 1/Notes.md",
+    "sha256": "a64f9ae4c6aa26c6f97bcf0323585b6907938c59d75beacae953649c20f7fdf6",
+    "bytes": 6598
+  },
+  {
+    "path": "topic 1/T1_1_Shwartz-Ziv2017InformationBottleneck.pdf",
+    "sha256": "1dc4501aa1e4e75bda26e2679553a8df9b736d65ac0b848a5b0263f7141b5ba3",
+    "bytes": 4808305
+  },
+  {
+    "path": "topic 1/T1_2_Dziugaite2017NonVacuousGB.pdf",
+    "sha256": "4d28d0e2f5f7b841a5c79c0ecfa675cb6357323a008fa048dff9a07594ee6a35",
+    "bytes": 611028
+  },
+  {
+    "path": "topic 1/T1_3_smith2018BayesianPerspectiveSGD.pdf",
+    "sha256": "b2f561a5e1073c4f05a22edf0803553bba561cd2864f65c2268b422755e0ae47",
+    "bytes": 653631
+  },
+  {
+    "path": "topic 1/T1_4_nakkiran2021DeepDoubleDescent.pdf",
+    "sha256": "8f731731ecb6dcf08cb9736e55b6f84a39d50546db0d9e724e1a68dc34464e68",
+    "bytes": 4929542
+  },
+  {
+    "path": "topic 1/T1_5_Liu2022UnderstandGrokking.pdf",
+    "sha256": "99f55e2f3828894481b4c81e011ea81a7bed40506cf268cbf96dc5d46b0c78cd",
+    "bytes": 1065641
+  },
+  {
+    "path": "topic 1/T1_6_sakabe2026BNN_BDM.pdf",
+    "sha256": "953744cf2120b6294669be59eaaf432433aa47c21e27192f421ed75501bbc926",
+    "bytes": 1410820
+  },
+  {
+    "path": "topic 2/Deep Generative Modeling.pdf",
+    "sha256": "d3a970dbbcfd4f26d0469ee21b99713daabd2a7bbbf11cbdf3ce9953bdc3d316",
+    "bytes": 30310264
+  },
+  {
+    "path": "topic 2/Drawing 2026-09-10 11.10.46.excalidraw.md",
+    "sha256": "217cd24043921165962837672f2e108e617b4becee0547e156682af57e44a006",
+    "bytes": 3243
+  },
+  {
+    "path": "topic 2/T2_1_REPA.pdf",
+    "sha256": "d97efd44d9354162bc4ad9b0d5288952f09a90e99c5da344b2098204b7a8164a",
+    "bytes": 34693389
+  },
+  {
+    "path": "topic 2/T2_2_Mean Flows.pdf",
+    "sha256": "c0b560a099c17966bbb0bb293f6c8d295f4a5a5f47b5698b4f26bd2d0f793caa",
+    "bytes": 5728284
+  },
+  {
+    "path": "topic 2/T2_3_DiME.pdf",
+    "sha256": "c5ebf7da74d2b0ee4a19b876a57372dd8855bcd2da97db6998205a0cb41003fb",
+    "bytes": 914517
+  },
+  {
+    "path": "topic 2/T2_4_DiffAtlas.pdf",
+    "sha256": "96b623485471742c79c730fb9c8a66a72b014fdae50f6169dac3574417c8947b",
+    "bytes": 1044499
+  },
+  {
+    "path": "topic 2/T2_5_FLUX.1 Kontext.pdf",
+    "sha256": "86c8acc1ca714fa463f02315d849a81b5d746c4da4ecb50743b9d672311f916b",
+    "bytes": 16533584
+  },
+  {
+    "path": "topic 2/T2_6_Qwen-Image.pdf",
+    "sha256": "16538964f7c446ec1fe422d0c7293b7ff7d7f009bc3788a116b20456607779bf",
+    "bytes": 43156117
+  },
+  {
+    "path": "topic 2/extra reading material/ATDL_GM_Reading_Materials-1.pdf",
+    "sha256": "b1407d10ee2f10f52b67344ed7e5320fbaaf67dd404b3bf05671c502e2d3f2eb",
+    "bytes": 69804
+  },
+  {
+    "path": "topic 2/extra reading material/DDPMs.pdf",
+    "sha256": "cb471d4c0063cad56f8d74b6a72fa7dad1677f8423a0a81349487a63bb58d3de",
+    "bytes": 33025164
+  },
+  {
+    "path": "topic 2/extra reading material/Deep Generative Modeling.pdf",
+    "sha256": "b3655c0ddda7345f020b132e57e826687b0f3dbbc67a3bca23f2738e29ffeed4",
+    "bytes": 19198500
+  },
+  {
+    "path": "topic 2/extra reading material/Flow_Matching.pdf",
+    "sha256": "d61ddac4329c49043c633c47fadd5293204bce4c9ab28e994a04c79e7251e622",
+    "bytes": 12990436
+  },
+  {
+    "path": "topic 2/extra reading material/GANs.pdf",
+    "sha256": "331961622a2f6588c48a34ecddc6a3d052ffe8fcfba333f233d5f27b2da5565d",
+    "bytes": 539761
+  },
+  {
+    "path": "topic 2/extra reading material/VAEs.pdf",
+    "sha256": "bdcb63b79ed88f64f8ee2d43a721930d01dde5441a4dba20ecaa2342b34e017c",
+    "bytes": 3926758
+  }
+]
