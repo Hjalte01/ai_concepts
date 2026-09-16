@@ -29,3 +29,7 @@
 - Live testing initially exposed an ambiguous test selector: the Hub's shadow-root app switcher has its own search input. The test now selects the atlas search box by its accessible name. Production search behavior was unaffected.
 - `nginx` is active. Static assets are deployed into the Nix store; no development server is required to keep the site available.
 
+
+## Follow-up validation — 2026-09-16
+
+The vault scan still matches the same 31-file snapshot. Refined signal/noise, counterfactual, joint image–mask and feature-distribution graphics to match their lessons directly. Five local browser tests pass, including a new interaction check showing that SNR can fall when the mean gradient shrinks while noise stays fixed.

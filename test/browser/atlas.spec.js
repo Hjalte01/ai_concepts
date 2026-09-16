@@ -20,3 +20,6 @@ test('paths, source coverage, map, unknown routes and back navigation',async({pa
 test('desktop and phone visual captures',async({page})=>{
  await page.setViewportSize({width:1440,height:1000});await page.goto('./');await expect(page.locator('.concept-card')).toHaveCount(concepts.length);await page.screenshot({path:'test-results/atlas-desktop.png',fullPage:true});await page.setViewportSize({width:390,height:844});await page.screenshot({path:'test-results/atlas-phone.png',fullPage:true});await page.goto('./#concept/kl-divergence');await page.screenshot({path:'test-results/lesson-phone.png',fullPage:true});
 });
+test('signal-to-noise controls show vanishing signal without increasing noise',async({page})=>{
+ await page.goto('./#concept/snr');await expect(page.locator('#visual-stats')).toContainText('0.625');await page.locator('#signal').fill('0');await page.locator('#signal').dispatchEvent('input');await expect(page.locator('#visual-stats')).toContainText('0.000');await expect(page.locator('#noise-value')).toHaveText('0.80');
+});

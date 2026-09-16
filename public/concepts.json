@@ -411,7 +411,7 @@
     "caveat": "SNR conventions differ, including squared ratios. Near a stationary point the mean may shrink even if noise also decreases.",
     "origin": "Signal-versus-noise language comes from measurement and communication and helps describe stochastic training dynamics.",
     "source": "https://udlbook.github.io/udlbook/",
-    "visual": "optimization",
+    "visual": "gradient-noise",
     "check": "Can SNR fall without noise becoming larger?",
     "answer": "Yes. The mean gradient may shrink while the noise stays similar."
   },
@@ -435,7 +435,7 @@
     "caveat": "The proposed link from this motion to information compression is paper-specific and disputed. SGD noise is generally neither constant nor isotropic.",
     "origin": "The ATDL 2017 information-bottleneck paper interprets a later phase as diffusion-driven compression; subsequent work limits that interpretation.",
     "source": "https://research.ibm.com/publications/on-the-information-bottleneck-theory-of-deep-learning--1",
-    "visual": "optimization",
+    "visual": "gradient-noise",
     "check": "Does noisy late training necessarily compress every neural network?",
     "answer": "No. This is a hypothesis whose behavior depends on the model, data and information estimator."
   },
@@ -1196,7 +1196,7 @@
     "caveat": "FID is sample- and feature-dependent; it is not a universal measure of quality. CLIP-based metrics add their own representation biases.",
     "origin": "The ATDL generative-model lecture includes FID, Inception Score and CMMD to make evaluation more systematic than inspecting selected images.",
     "source": "vault:slides/4-5_ATDL GM Lecture 2.pdf",
-    "visual": "distribution",
+    "visual": "metrics",
     "check": "Why is a hand-picked gallery insufficient evidence of generator quality?",
     "answer": "It can hide failures and missing diversity; evaluation needs a representative sampling protocol."
   },
@@ -1220,7 +1220,7 @@
     "caveat": "A model counterfactual is not automatically a real-world causal intervention. A generator may introduce unrelated changes or exploit classifier shortcuts.",
     "origin": "DiME uses guided diffusion to produce counterfactual images and evaluates how explanations expose spurious correlations.",
     "source": "vault:topic 2/T2_3_DiME.pdf",
-    "visual": "gan",
+    "visual": "counterfactual",
     "check": "Why is a tiny adversarial perturbation not necessarily a useful counterfactual explanation?",
     "answer": "It may flip the label without representing a human-understandable, plausible change."
   },
@@ -1268,7 +1268,7 @@
     "caveat": "Guided joint sampling is not automatically exact conditional inference. Domain-shift performance is an empirical result, not a guarantee.",
     "origin": "DiffAtlas reinterprets atlas-style segmentation using joint image–mask diffusion, studying limited-data and cross-modality settings.",
     "source": "https://arxiv.org/abs/2503.06748",
-    "visual": "vae",
+    "visual": "joint-model",
     "check": "What is the central difference from a plain discriminative segmenter?",
     "answer": "The joint model learns a distribution over both images and masks, rather than only a direct input-to-mask prediction."
   },

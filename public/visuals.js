@@ -16,6 +16,8 @@ export function visualMarkup(c){
  caption='An exact two-outcome calculation. All information quantities use log₂ and are measured in bits.';
  }else if(c.visual==='information'){
  controls=slider('error','Chance the copied bit is flipped',0,.5,.1);caption='Exact binary symmetric channel: X is a fair bit; Y copies it with independent flip probability e.';
+ }else if(c.visual==='gradient-noise'){
+ controls=slider('signal','Mean gradient magnitude',0,2,.5)+slider('noise','RMS gradient fluctuation',.05,2,.8);caption='Illustrative batch gradients: a fixed set of zero-mean fluctuations with controlled RMS. The ratio uses the mean-gradient / RMS-noise convention.';
  }else if(c.visual==='optimization'){
  controls=slider('rate','Learning rate η',.01,1.1,.15);caption='Exact gradient descent on L(w)=w², starting at w=2. This isolates step size; the trace has no mini-batch noise.';
  }else if(c.visual==='flow'||c.visual==='diffusion'){
@@ -54,6 +56,19 @@ export function mountVisual(c){
    const e=val('error',.1),mi=binaryChannelInformation(e),cond=1-mi;
    b=text(55,40,'Uncertainty in X: 1 bit')+`<rect x="55" y="80" width="510" height="65" rx="8" class="pale-fill"/><rect x="55" y="80" width="${510*mi}" height="65" rx="8" class="bar"/>`+text(55,175,`Shared I(X;Y): ${f(mi)} bits`)+text(55,207,`Remaining H(X|Y): ${f(cond)} bits`)+text(55,248,'shared + remaining = original uncertainty');
    s=stat('Flip probability',e.toFixed(2))+stat('Mutual information',f(mi))+stat('Joint entropy',f(1+cond));
+  }else if(c.visual==='gradient-noise'){
+   const mean=val('signal',.5),noise=val('noise',.8);
+   b=line(55,140,590,140,'dashed')+text(55,25,'batch gradient: consistent signal + fluctuation');
+   const deviations=[-1,1,-1,1,1,-1,1,-1,-1,1,1,-1];
+   const y=v=>140-v*26;
+   b+=line(55,y(mean),590,y(mean),'strong-line');
+   deviations.forEach((d,i)=>{let x=75+i*43;const g=mean+noise*d;b+=line(x,y(mean),x,y(g),'faint')+circle(x,y(g),6);});
+   b+=text(55,253,'orange: mean · green: batch estimates');
+   s=stat('Signal',mean.toFixed(2))+stat('RMS noise',noise.toFixed(2))+stat('SNR',f(mean/noise));
+  }else if(c.visual==='metrics'){
+   b=axis()+text(55,23,'Two feature distributions: both moments matter');
+   const density=(mu,sd)=>Array.from({length:100},(_,i)=>{const x=i/99*6-3;return [55+i/99*520,225-(95/sd)*Math.exp(-.5*((x-mu)/sd)**2)];});
+   b+=path(pointsPath(density(-.5,.6)))+path(pointsPath(density(.5,.95)),'accent-curve')+text(90,90,'real')+text(380,90,'generated')+text(380,260,'feature coordinate →');
   }else if(c.visual==='optimization'){
    const rate=val('rate',.15),ps=euler(2,rate),scale=Math.max(2,...ps.map(Math.abs));
    b=axis()+line(55,130,590,130,'dashed')+path(pointsPath(ps.map((v,i)=>[55+i*43,130-v/scale*85])))+ps.map((v,i)=>circle(55+i*43,130-v/scale*85,4)).join('')+text(60,22,'parameter w')+text(450,260,'update step →');
@@ -94,7 +109,7 @@ export function mountVisual(c){
    for(let i=0;i<40;i++)b+=`<rect x="${55+i%10*30}" y="${45+Math.floor(i/10)*35}" width="24" height="24" rx="4" class="${i<10?'bar':'pale-fill'}"/>`;
    b+=text(380,65,c.id==='bootstrap'?'resample units':'one row = batch')+text(380,105,c.id==='bootstrap'?'with replacement':'all rows = epoch')+text(55,230,c.id==='bootstrap'?'Recompute a statistic for each resampled dataset.':'Each batch supplies one parameter update.');
   }else{
-   const labels=c.visual==='vae'?['encode / infer','latent z','decode x']:c.visual==='gan'?['noise z','generator','critic feedback']:c.visual==='chain'?['source X','state T','next state Z']:c.visual==='bottleneck'?['input X','keep useful T','predict Y']:c.visual==='tradeoff'?['fit / reward','choose balance','cost / constraint']:c.id==='ctm'?['run machines','count outputs','−log frequency']:c.id==='ste'?['real weights','binary forward','surrogate backward']:c.id==='algorithmic-probability'?['random program','execute','weight outputs']:['starting point','transformation','new quantity'];
+   const labels=c.visual==='counterfactual'?['original image','plausible edit','classifier flips']:c.visual==='joint-model'?['image + mask','joint diffusion','image guides mask']:c.visual==='vae'?['encode / infer','latent z','decode x']:c.visual==='gan'?['noise z','generator','critic feedback']:c.visual==='chain'?['source X','state T','next state Z']:c.visual==='bottleneck'?['input X','keep useful T','predict Y']:c.visual==='tradeoff'?['fit / reward','choose balance','cost / constraint']:c.id==='ctm'?['run machines','count outputs','−log frequency']:c.id==='ste'?['real weights','binary forward','surrogate backward']:c.id==='algorithmic-probability'?['random program','execute','weight outputs']:['starting point','transformation','new quantity'];
    labels.forEach((v,i)=>{let x=30+i*205;b+=`<rect x="${x}" y="90" width="175" height="75" rx="12" class="${i===1?'bar':'pale-fill'}"/>`+text(x+12,132,v,i===1?'inverse':'');if(i<2)b+=text(x+181,133,'→');});
    b+=text(35,215,c.visual==='bottleneck'?'Discard nuisance detail; preserve target information.':c.visual==='tradeoff'?'A better fit must justify its additional cost.':'Follow the transformation from left to right.');
   }
