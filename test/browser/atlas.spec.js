@@ -8,7 +8,7 @@ test('every lesson renders without errors or horizontal overflow on phone',async
  expect(errors).toEqual([]);
 });
 test('search, filters, information calculation, recall and persistence',async({page})=>{
- await page.goto('./');await page.locator('#search').fill('Kullback');await expect(page.locator('.concept-card')).toHaveCount(1);await page.locator('#search').fill('KL divergence');await expect(page.locator('.concept-card')).toHaveCount(1);await page.locator('.concept-card').click();await expect(page.locator('h1')).toHaveText('KL divergence');
+ await page.goto('./');await page.getByRole('searchbox',{name:'Search concepts'}).fill('Kullback');await expect(page.locator('.concept-card')).toHaveCount(1);await page.getByRole('searchbox',{name:'Search concepts'}).fill('KL divergence');await expect(page.locator('.concept-card')).toHaveCount(1);await page.locator('.concept-card').click();await expect(page.locator('h1')).toHaveText('KL divergence');
  await expect(page.locator('#visual-stats')).toContainText('0.737');await page.locator('#q').fill('0.5');await page.locator('#q').dispatchEvent('input');await expect(page.locator('#visual-stats')).toContainText('0.000');
  await page.locator('#q').fill('0');await page.locator('#q').dispatchEvent('input');await expect(page.locator('#visual-stats')).toContainText('∞');
  await page.locator('#understood').click();await page.reload();await expect(page.locator('#understood')).toHaveAttribute('aria-pressed','true');
