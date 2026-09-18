@@ -1,3 +1,4 @@
+import {flowVisualMarkup,mountFlowVisual} from './flow-study.js';
 import {entropy,crossEntropy,kl,bernoulli,binaryChannelInformation,euler} from './math.js';
 const svg=(title,body)=>`<svg viewBox="0 0 620 280" role="img" aria-label="${title}"><title>${title}</title>${body}</svg>`;
 const text=(x,y,s,cls='')=>`<text x="${x}" y="${y}" class="${cls}">${s}</text>`;
@@ -9,6 +10,7 @@ const f=n=>Number.isFinite(n)?n.toFixed(3):'∞';
 const axis=()=>line(55,225,590,225)+line(55,225,55,30);
 const pointsPath=ps=>'M'+ps.map(p=>p.join(',')).join(' L');
 export function visualMarkup(c){
+ if(c.visual==='flow-study')return flowVisualMarkup();
  let controls='',caption='Concept sketch · illustrates the mechanism; not experimental measurements.';
  if(['entropy','surprise','distribution','mismatch'].includes(c.visual)){
  controls=slider('p','Reality P: probability of outcome A',0,1,.5);
@@ -28,6 +30,7 @@ export function visualMarkup(c){
  return `<div class="visual-card"><div class="visual-heading"><span class="eyebrow">${controls?'Explore the idea':'See the mechanism'}</span><span class="live-badge">${controls?'Interactive':'Visual guide'}</span></div><div id="figure"></div><div id="visual-stats" class="visual-stats" aria-live="polite"></div><div class="controls">${controls}</div><p class="caption">${caption}</p></div>`;
 }
 export function mountVisual(c){
+ if(c.visual==='flow-study'){mountFlowVisual();return;}
  let pattern='repeat';
  const figure=document.querySelector('#figure');if(!figure)return;
  const stats=document.querySelector('#visual-stats');

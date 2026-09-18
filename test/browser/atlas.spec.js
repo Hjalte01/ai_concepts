@@ -4,7 +4,7 @@ const concepts=JSON.parse(fs.readFileSync('public/concepts.json'));
 test('every lesson renders without errors or horizontal overflow on phone',async({page})=>{
  await page.setViewportSize({width:390,height:844});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('./');
  await expect(page.locator('.concept-card')).toHaveCount(concepts.length);
- for(const c of concepts){await page.goto(`./#concept/${c.id}`);await expect(page.locator('h1')).toHaveText(c.title);await expect(page.locator('#figure svg')).toBeVisible();await expect(page.locator('.formula')).toHaveText(c.formula);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),c.id).toBe(true);await page.locator('summary').click();await expect(page.locator('details p')).toHaveText(c.answer);}
+ for(const c of concepts){await page.goto(`./#concept/${c.id}`);await expect(page.locator('h1')).toHaveText(c.title);await expect(page.locator('#figure svg')).toBeVisible();await expect(page.locator('.formula')).toHaveText(c.formula);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),c.id).toBe(true);await page.locator('.recall summary').click();await expect(page.locator('.recall details p')).toHaveText(c.answer);}
  expect(errors).toEqual([]);
 });
 test('search, filters, information calculation, recall and persistence',async({page})=>{

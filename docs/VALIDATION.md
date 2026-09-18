@@ -33,3 +33,34 @@
 ## Follow-up validation — 2026-09-16
 
 The vault scan still matches the same 31-file snapshot. Refined signal/noise, counterfactual, joint image–mask and feature-distribution graphics to match their lessons directly. Five local browser tests pass, including a new interaction check showing that SNR can fall when the mean gradient shrinks while noise stays fixed.
+
+## Flow paper walkthroughs — 2026-09-18
+
+- Interpreted the requested sequence as Flow Matching (2210.02747), Mean Flows
+  for One-step Generative Modeling (2505.13447), and Improved Mean Flows
+  (2512.02012). The last is explicitly distinguished from the separate
+  Understanding, Accelerating, and Improving MeanFlow Training paper.
+- Read the MeanFlow v1 and iMF v2 primary derivations, algorithms and architecture
+  details, plus the official iMF implementation. Added links to primary Flow
+  Matching, Rectified Flow and DiT sources. No vault import was requested.
+- Expanded the existing Flow Matching lesson and added two connected chapters:
+  57 complete lessons, 26 unchanged vault keyword mappings, no dependency cycles.
+- Added optional math primers, exact trajectory/interval controls, architecture
+  maps, a six-stage training microscope, method comparisons and thesis prompts.
+- Sampling examples use an exact scalar ODE, explicitly labeled as an oracle.
+  Training examples fit one pair with manual stopped-branch gradients; they do
+  not reproduce the papers' image experiments or establish relative quality.
+- `npm ci`, `npm run check`, seven numerical/interpreter tests and the six-example
+  CPython parity check pass. Tests include the MeanFlow identity, interval
+  composition, equal-time limits, tangent differences and interpreter limits.
+- Eight browser tests pass with Nix Chromium, including all 57 lessons on phone,
+  editable output/error/reset/download behavior, navigation, math disclosures,
+  keyboard access, reduced-motion mode and unavailable browser storage.
+- Inspected actual desktop and phone screenshots of the training microscope and
+  editor; full chapter captures are in ignored `test-results/`.
+- The downloadable neural-network example passed Python syntax validation.
+  PyTorch is not installed in the default environment; its execution is not
+  included in the CPython parity claim (which covers the browser examples).
+- Added the repository to the Nix deployment registry and validated it with the
+  queue's actual `plan_for` function. The existing unrelated `flake.nix` edit is
+  preserved and excluded from this task's commits. No Git pushes are performed.

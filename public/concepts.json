@@ -1062,23 +1062,147 @@
     "group": "Generation",
     "prerequisites": [
       "ode",
-      "latent"
+      "latent",
+      "gradient"
     ],
-    "question": "Can we directly learn the velocity that transports noise into data?",
-    "intuition": "Choose a probability path between easy noise and real examples, then regress a velocity field along it.",
+    "question": "How can a network learn to move noise into data without solving an ODE during training?",
+    "intuition": "Give the network many noisy intermediate states and teach it the local direction of motion. At generation time, follow the learned directions backward in small steps.",
     "steps": [
-      "Draw noise x₀ and data x₁.",
-      "On a straight conditional path set xₜ=(1−t)x₀+tx₁.",
-      "Regress vθ(xₜ,t) toward x₁−x₀, then integrate from noise."
+      "Choose a data example x and independent Gaussian noise ε. In this chapter, data is at time 0 and noise at time 1.",
+      "Choose t and mix them: zₜ=(1−t)x+tε. Differentiating this straight conditional path gives the available target ε−x.",
+      "Feed zₜ and t to a velocity network. Minimize squared error against ε−x; compatible pairs collectively teach a marginal velocity field.",
+      "Start from new noise at t=1. Repeatedly predict the velocity and take a backward solver step until t=0."
     ],
-    "formula": "L = E[‖vθ(xₜ,t) − (x₁−x₀)‖²]",
-    "example": "For x₀=−2 and x₁=3, a conditional straight path has constant target velocity 5.",
-    "caveat": "Straight conditional training paths do not guarantee straight learned marginal trajectories. Pairing, objectives and reflow procedures distinguish specific methods.",
+    "formula": "LFM = E[‖vθ(zₜ,t) − (ε−x)‖²];    zₜ₋ₕ ≈ zₜ − h vθ(zₜ,t)",
+    "example": "Take x=−1, ε=2 and t=0.6. The mixed state is −0.4+1.2=0.8, and the training velocity is 3. A prediction of 0.62 has squared error (0.62−3)²=5.6644. The minus sign in generation reverses the data-to-noise velocity.",
+    "caveat": "A straight path for one paired example does not imply straight trajectories of the learned marginal field. This is the independent-pair linear-path case, not every path allowed by Flow Matching, and not an implementation of optimal transport pairing or reflow.",
     "origin": "Flow matching and rectified flow developed closely related velocity-learning approaches. Lipman et al. (2022) frame flow matching through probability paths.",
     "source": "https://arxiv.org/abs/2210.02747",
-    "visual": "flow",
+    "visual": "flow-study",
     "check": "Is the learned velocity necessarily the displacement of one specific paired example?",
-    "answer": "No. Regression averages compatible conditional targets at a state and time."
+    "answer": "No. Regression averages compatible conditional targets at a state and time.",
+    "study": {
+      "number": 1,
+      "subtitle": "Learn a local direction. Repeat it to travel.",
+      "change": "Start with the shared path, a time-conditioned network, and ordinary velocity regression.",
+      "sections": [
+        {
+          "title": "Read the symbols before the equations",
+          "body": [
+            "x is a real example; ε (epsilon) is random noise; zₜ is an intermediate state. A state can be one number, a point with two coordinates, or thousands of image-latent coordinates. Bold vectors are not necessary here: the same arithmetic acts on every coordinate.",
+            "Throughout these three sections, t=0 means data and t=1 means noise. Generation travels backward, from 1 to 0. This reverses the convention used in some flow-matching presentations but does not change the underlying method. r is an earlier, less noisy time; 0 ≤ r ≤ t ≤ 1. h=t−r is the jump length.",
+            "θ (theta) names all learnable network weights. v means instantaneous velocity: motion per unit time right now. u means average velocity over a specified interval. E means an average over random training examples. ‖error‖² means square each coordinate error and add them. sg means keep a computed value but stop gradients through that branch."
+          ],
+          "formula": "zₜ = (1−t)x + tε     h = t−r     v꜀ = ε−x",
+          "kind": "Notation"
+        },
+        {
+          "title": "1. A distribution is a cloud, not one destination",
+          "body": [
+            "Imagine each noise sample as a dot in a cloud. We want the whole cloud to end up shaped like the data cloud. No label tells a fresh random dot which particular photograph it must become. A learned vector field supplies a direction at every visited state and time.",
+            "For training, we can invent easy paths between sampled endpoints. With the straight interpolation above, the derivative is −x+ε because the endpoints stay fixed while t changes. We therefore get a target without running the learned model to create a trajectory. This is why the training objective is called simulation-free: training-state construction needs no ODE solver."
+          ],
+          "formula": "d[(1−t)x+tε]/dt = ε−x",
+          "kind": "Construction"
+        },
+        {
+          "title": "2. Why matching pairs learns a field",
+          "body": [
+            "Different endpoint pairs can pass through the same state. Their velocity labels may disagree. A deterministic network only sees the state and time, so squared-error fitting encourages the average compatible velocity, called the marginal velocity.",
+            "For example, two equally likely labels 1 and 3 at the same input are best predicted by 2. The loss is ((q−1)²+(q−3)²)/2=(q−2)²+1. The unavoidable 1 is label variation, not a model failure.",
+            "More generally, conditional squared error separates into distance from E[v꜀|z,t] plus conditional variance. Under regularity conditions, this marginal field transports the selected probability path: the density satisfies the continuity equation. We are describing a population optimum; finite data, imperfect networks and numerical solvers introduce errors."
+          ],
+          "formula": "v(z,t) = E[ε−x | zₜ=z, t];    ∂ₜpₜ + ∇·(pₜv) = 0",
+          "kind": "Identity and assumptions"
+        },
+        {
+          "title": "3. Architecture: what passes through the network?",
+          "body": [
+            "Flow Matching specifies a learning objective, not a unique architecture. A small 2D experiment can concatenate the two state coordinates and a time embedding, pass them through an MLP, and output two velocity coordinates. A U-Net or a transformer can instead handle images.",
+            "For a fair comparison with the next two papers, the diagram uses a DiT-style latent-image backbone as a teaching example. A fixed VAE encoder compresses an image into a latent grid. Mixing with noise happens in that grid. Patches become token vectors; positional information keeps their spatial arrangement identifiable.",
+            "A time embedding, and optionally a class embedding, controls the transformer. In adaLN-style conditioning, learned functions of these embeddings adjust normalization scales, shifts and residual gates. Attention lets each image token gather information from other locations; an MLP transforms each token; residual connections add the update to its incoming representation.",
+            "The output projection maps image tokens back to a velocity grid of the same shape as z. A velocity value is a proposed change, not a final pixel color. At sampling time the numerical solver updates the latent, then a VAE decoder turns the final latent into pixels. This illustrative backbone must not be attributed as a mandatory design of the original Flow Matching paper.",
+            "In the attention formula, H stacks token vectors in rows; WQ, WK and WV are learned projection matrices. Q, K and V mean queries, keys and values. Kᵀ is the transposed key matrix, d is the key width, and softmax acts across key positions for each query. An output row is therefore a weighted mixture of value vectors, with weights summing to one."
+          ],
+          "formula": "Q=HWQ, K=HWK, V=HWV;    attention(H)=softmax(QKᵀ/√d)V",
+          "kind": "Architecture example"
+        },
+        {
+          "title": "4. Training and sampling are different algorithms",
+          "body": [
+            "Training: sample a batch of x and ε; sample t; compute z and ε−x; predict velocity; average squared errors; backpropagate into θ; update weights with an optimizer. Repeat across many independent examples. The steps in the microscope below expose a single example inside this process.",
+            "Sampling: freeze θ, draw fresh ε, set z=ε and t=1, predict velocity, subtract h times that velocity, reduce t by h, and repeat. Euler uses one prediction per step; Heun typically uses two to better approximate curvature. Count neural function evaluations (NFE), not just outer-loop iterations.",
+            "For the analytic toy dz/dt=z with z(1)=2, the exact endpoint is 2/e≈0.73576. One backward Euler step gives 2−2=0. Eight steps give 2(7/8)⁸≈0.68722. More small steps approach the exact solution. This illustrates integration error even when the instantaneous field is known perfectly; it is not a generated-image quality benchmark."
+          ],
+          "formula": "Euler: z ← z − h vθ(z,t);    t ← t−h",
+          "kind": "Algorithm and worked example"
+        },
+        {
+          "title": "5. What problem remains for MeanFlow?",
+          "body": [
+            "A local direction is insufficient to describe a long curved trip with one straight jump. One large Euler step treats the current velocity as constant over the entire interval. Rather than only improving the solver, we can ask a new learning question: can the network predict the average velocity of the whole trip?",
+            "Rectified Flow also studies straight interpolations and learned transport, with reflow procedures intended to make learned trajectories straighter. Do not equate all Flow Matching methods with reflow, or interpret an independently sampled pair as an optimal transport coupling. The next chapter changes the predicted quantity itself."
+          ],
+          "formula": "Local information: v(z,t)     →     interval information: u(z,r,t)",
+          "kind": "Motivation"
+        }
+      ],
+      "architecture": [
+        [
+          "Image or point",
+          "Training x → fixed encoder for images",
+          "Example: 256×256×3 → 32×32×4 latent"
+        ],
+        [
+          "Mix with noise",
+          "z=(1−t)x+tε",
+          "Same shape as the data representation"
+        ],
+        [
+          "Embed inputs",
+          "Patch tokens + position; embed time t",
+          "For 2D, use a small MLP instead"
+        ],
+        [
+          "Conditioned transformer",
+          "Attention + token MLP + residual additions",
+          "Example: time/class modulate normalization"
+        ],
+        [
+          "Project and unpatchify",
+          "Predict instantaneous velocity vθ",
+          "Output has exactly the shape of z"
+        ],
+        [
+          "Repeat solver → decode",
+          "z ← z−h vθ; repeat to t=0",
+          "One model call per Euler step"
+        ]
+      ],
+      "research": [
+        "Separate field error from integration error: first test solvers on a known analytic field, then test a learned field against a high-accuracy reference integration.",
+        "Hypothesis to test, not an established result: a different endpoint coupling may reduce trajectory curvature. Compare identical model size, training budget, solver and evaluation data; measure curvature as well as sample quality."
+      ],
+      "sources": [
+        [
+          "Flow Matching for Generative Modeling — Lipman et al. (2022), §3–4",
+          "https://arxiv.org/abs/2210.02747"
+        ],
+        [
+          "Flow Straight and Fast — Liu, Gong & Liu (2022), rectified flow and reflow",
+          "https://arxiv.org/abs/2209.03003"
+        ],
+        [
+          "Scalable Diffusion Models with Transformers — Peebles & Xie (2022), backbone context",
+          "https://arxiv.org/abs/2212.09748"
+        ]
+      ]
+    },
+    "aliases": [
+      "flow",
+      "flow matching",
+      "rectified flow"
+    ]
   },
   {
     "id": "guidance",
@@ -1296,5 +1420,333 @@
     "visual": "attention",
     "check": "Why might a semantic representation alone fail to preserve exact appearance?",
     "answer": "It can retain what an object is while discarding fine spatial or visual details needed for reconstruction."
+  },
+  {
+    "group": "Generation",
+    "visual": "flow-study",
+    "id": "mean-flow",
+    "title": "MeanFlow: learn the whole jump",
+    "prerequisites": [
+      "flow-matching"
+    ],
+    "question": "Can a network predict an interval’s average velocity so generation needs only one jump?",
+    "intuition": "Replace “how fast right now?” with “what constant velocity would cover the same displacement?” A calculus identity lets us train this interval prediction without computing every true trajectory.",
+    "steps": [
+      "Define average velocity along a trajectory as displacement divided by elapsed time: u(zₜ,r,t)=(zₜ−zᵣ)/(t−r).",
+      "Multiply by t−r and differentiate with respect to t, keeping r fixed. The product rule gives u+(t−r)du/dt=v.",
+      "Use the chain rule: du/dt=(∂u/∂z)v+∂u/∂t. Compute this directional derivative using a Jacobian-vector product (JVP).",
+      "Train uθ against the stopped target (ε−x)−(t−r)JVP(uθ; ε−x). This is a practical network-dependent target, not access to true average velocities.",
+      "Generate with zᵣ=zₜ−(t−r)uθ(zₜ,r,t). The full jump uses r=0,t=1."
+    ],
+    "formula": "u = v − (t−r)du/dt;    LMF = E[‖uθ − sg(v꜀−(t−r)JVP(uθ;v꜀))‖²]",
+    "example": "For dz/dt=z with z₁=2, z₀=2/e≈0.73576. Average velocity over [0,1] is 2−2/e≈1.26424; instantaneous velocity at t=1 is 2. Subtracting the average gives the correct endpoint in one step; subtracting the instantaneous velocity gives 0.",
+    "caveat": "The exact identity concerns the true marginal ODE and assumes sufficient smoothness. Practical training substitutes a neural prediction and sampled conditional velocity. One-step correctness requires an accurate learned interval field; the identity is not a guarantee that optimization recovers it.",
+    "origin": "Geng et al., Mean Flows for One-step Generative Modeling (2025), use the relation between average and instantaneous velocity to train a generator without teacher distillation. The discussion here reconstructs the mathematics, not the authors’ private reasoning.",
+    "source": "https://arxiv.org/abs/2505.13447",
+    "check": "Why is an average of the velocities at the two endpoints generally not the MeanFlow target?",
+    "answer": "The target averages velocity continuously along the trajectory. Two endpoint values give only a trapezoidal approximation, exact under special conditions such as velocity varying linearly with time. MeanFlow learns an interval field, not just the arithmetic mean of two network outputs.",
+    "study": {
+      "number": 2,
+      "subtitle": "Keep the path. Change what the network predicts.",
+      "change": "Reuse Flow Matching’s endpoints, noise mixture and backbone. Add a second time and learn average velocity using a derivative correction.",
+      "sections": [
+        {
+          "title": "Read the symbols before the equations",
+          "body": [
+            "x is a real example; ε (epsilon) is random noise; zₜ is an intermediate state. A state can be one number, a point with two coordinates, or thousands of image-latent coordinates. Bold vectors are not necessary here: the same arithmetic acts on every coordinate.",
+            "Throughout these three sections, t=0 means data and t=1 means noise. Generation travels backward, from 1 to 0. This reverses the convention used in some flow-matching presentations but does not change the underlying method. r is an earlier, less noisy time; 0 ≤ r ≤ t ≤ 1. h=t−r is the jump length.",
+            "θ (theta) names all learnable network weights. v means instantaneous velocity: motion per unit time right now. u means average velocity over a specified interval. E means an average over random training examples. ‖error‖² means square each coordinate error and add them. sg means keep a computed value but stop gradients through that branch."
+          ],
+          "formula": "zₜ = (1−t)x + tε     h = t−r     v꜀ = ε−x",
+          "kind": "Notation"
+        },
+        {
+          "title": "1. The speedometer and the journey",
+          "body": [
+            "A speedometer gives instantaneous speed. Distance divided by travel time gives average speed. For vector motion we instead divide displacement by time: going out and back can have zero average velocity despite lots of movement. MeanFlow concerns vector displacement, not distance traveled.",
+            "Follow the marginal ODE from zₜ backward to zᵣ. The average is the integral of the vector velocity along that same trajectory divided by t−r. It is not an average over training images, nor necessarily the straight conditional pair displacement ε−x.",
+            "For the exact toy z(s)=2 exp(s−1), choose t=1 and r=0. The displacement is 1.26424, duration is 1, and the average velocity is 1.26424. The initial instantaneous velocity 2 overestimates the displacement when used for one long backward step."
+          ],
+          "formula": "u(zₜ,r,t) = [1/(t−r)] ∫ᵣᵗ v(zₛ,s) ds = (zₜ−zᵣ)/(t−r)",
+          "kind": "Definition"
+        },
+        {
+          "title": "2. Derive the MeanFlow identity, one operation at a time",
+          "body": [
+            "First multiply by the interval length: (t−r)u=∫ᵣᵗv ds. This removes the fraction and exposes a product.",
+            "Now increase the upper time t a little while following the same ODE trajectory and holding r fixed. On the left both the interval length and the average change. The product rule gives u+(t−r)du/dt.",
+            "On the right the newly added thin slice contributes v(zₜ,t). This is the fundamental theorem of calculus. Equating the two derivatives and rearranging yields the identity.",
+            "The derivative identity plus the regular boundary behavior recovers the displacement definition. If arbitrary singular functions were permitted near t=r, differentiating alone could conceal an integration constant. Smoothness and the limit u(z,t,t)=v(z,t) matter."
+          ],
+          "formula": "(t−r)u = ∫ᵣᵗv ds  →  u+(t−r)du/dt=v  →  u=v−(t−r)du/dt",
+          "kind": "Derivation"
+        },
+        {
+          "title": "3. The derivative follows motion, not just the clock",
+          "body": [
+            "The function has three inputs: state z, start time r, end time t. As t changes, z changes along the ODE; r stays fixed. The chain rule adds the effect of moving through space to the effect of the clock changing.",
+            "The Jacobian is the table of output changes caused by each input coordinate. We do not need to store that huge table. A JVP asks only how the output changes in one direction: (v,0,1). The 0 means r is fixed and the 1 means t advances at unit speed.",
+            "For the scalar network u=a z+b t+c r+d, ∂zu=a and ∂tu=b, so the derivative is a v+b. With a=0.5,b=0.2 and conditional velocity 3, it is 1.7. If h=0.4, the correction is 0.68. With u=0.6, the stopped target is 3−0.68=2.32, error is −1.72, and loss is 2.9584.",
+            "Autodiff computes a JVP through the entire network. A finite difference can check a toy derivative, but production JVP is not defined by choosing a tiny finite-difference step. If the implementation uses h=t−r as an input instead of r, its time-direction derivative must account for dh/dt=1."
+          ],
+          "formula": "du/dt = (∂zu)v + ∂tu = JVP(u; (v,0,1))",
+          "kind": "Chain rule and numerical example"
+        },
+        {
+          "title": "4. Turning an identity into an algorithm",
+          "body": [
+            "The true marginal velocity and true average field are unknown. The original recipe substitutes the sampled target v꜀=ε−x for the velocity and the current network for the average field inside the derivative. It computes a fresh target from those values.",
+            "Stop-gradient keeps the numerical target fixed while calculating a weight update. It does not make the target constant across training: the next update recomputes it with the changed network. This distinction explains why MeanFlow is not ordinary regression on a permanently labeled average velocity.",
+            "A batch samples r≤t, with some examples set to r=t so that the correction vanishes and the network also learns the instantaneous boundary. The papers use specific time-sampling distributions and adaptive loss weights; the short code below isolates the core unweighted objective.",
+            "At inference, neither JVP nor a training target is required. Draw fresh noise and evaluate uθ(ε,0,1); subtract it from ε. Several shorter interval predictions are also possible. Training costs include derivatives even though sampling may take one model evaluation."
+          ],
+          "formula": "D=JVP(uθ;v꜀); target=sg(v꜀−hD); loss=‖uθ−target‖²; zᵣ=zₜ−h uθ",
+          "kind": "Practical approximation"
+        },
+        {
+          "title": "5. Architecture: a second clock, the same output shape",
+          "body": [
+            "Keep the latent patches, transformer blocks and output projection from the shared image example. The network now needs both where the state is (t) and how far the requested jump reaches (r, or equivalently t−r). These scalar inputs are embedded before conditioning the blocks.",
+            "The output is still one vector per latent location. Its interpretation changes from local velocity to interval-average velocity. Nothing requires an output tensor containing all intermediate frames. Inference applies the displacement equation and decodes the endpoint.",
+            "Original MeanFlow builds classifier-free guidance into the field during training so guided inference can stay at one evaluation. Its guidance strength is fixed for a trained model in the original formulation; simply mixing conditional and unconditional outputs at sampling would add calls and is not the paper’s one-call recipe.",
+            "The JVP is a training calculation around the network, not a special inference layer. The diagram below separates input conditioning, network computation and final sampling. The family of possible backbones remains broader than the particular DiT experiment."
+          ],
+          "formula": "uθ: (zₜ, r, t, class) → average-velocity grid",
+          "kind": "Architecture"
+        },
+        {
+          "title": "6. What stays exact, and what can fail?",
+          "body": [
+            "Exact: the definition, product rule and chain rule under regularity assumptions. Approximate: the learned field, sampled conditional replacements and numerical optimization. Empirical: image quality and stability obtained by a particular training recipe.",
+            "The identity is compatible with intervals composing: the displacement from t to r equals the displacement from t to s plus that from s to r, where the second prediction must use the transported intermediate state zₛ. Test that state-dependent composition rather than averaging two predictions at the same state.",
+            "The next chapter keeps this same sampling rule. It examines a weakness inside training: the compound prediction contains the random pair label through its derivative direction. Rewriting the residual alone will not change the optimization; changing that direction does."
+          ],
+          "formula": "(t−r)u(zₜ,r,t) = (t−s)u(zₜ,s,t) + (s−r)u(zₛ,r,s)",
+          "kind": "Identity and limitation"
+        }
+      ],
+      "architecture": [
+        [
+          "Data, noise and two times",
+          "z=(1−t)x+tε; choose r≤t",
+          "Same conditional path as Flow Matching"
+        ],
+        [
+          "Patch + position embeddings",
+          "Encode the latent grid as image tokens",
+          "No intermediate-frame output is required"
+        ],
+        [
+          "Condition on interval",
+          "Embed t and r (or h=t−r), plus class",
+          "DiT-style modulation of transformer blocks"
+        ],
+        [
+          "Predict average velocity",
+          "uθ(z,r,t) has the shape of z",
+          "Training: also compute a directional JVP"
+        ],
+        [
+          "Stopped correction target",
+          "v꜀−(t−r) JVP(uθ;v꜀)",
+          "Training only; optimize the direct u branch"
+        ],
+        [
+          "One jump → decode",
+          "z₀ = ε−uθ(ε,0,1)",
+          "Inference: no JVP or teacher call"
+        ]
+      ],
+      "research": [
+        "Measure interval-composition error at several gaps and boundary error at r=t. Low training loss alone does not establish accurate long jumps.",
+        "Hypothesis to test: changing the fraction of boundary examples could improve or harm large-gap learning. Keep total updates fixed, compare several seeds, and report both short- and full-interval errors before making a quality claim."
+      ],
+      "sources": [
+        [
+          "Mean Flows for One-step Generative Modeling — Geng et al. (2025), §4 and Algorithms 1–2",
+          "https://arxiv.org/html/2505.13447v1"
+        ],
+        [
+          "Official MeanFlow implementation and training configuration",
+          "https://github.com/Gsunshine/meanflow"
+        ]
+      ]
+    },
+    "aliases": [
+      "mean flow",
+      "mean flows",
+      "MeanFlow",
+      "MF"
+    ]
+  },
+  {
+    "group": "Generation",
+    "visual": "flow-study",
+    "id": "improved-mean-flow",
+    "title": "Improved MeanFlow: iMF",
+    "prerequisites": [
+      "mean-flow",
+      "guidance",
+      "attention"
+    ],
+    "question": "How can one-step generation keep the MeanFlow idea while improving training and guidance flexibility?",
+    "intuition": "Keep the average-velocity output and one-jump sampler. Form a velocity prediction whose derivative follows a predicted field, and teach the network to accept guidance settings as explicit inputs.",
+    "steps": [
+      "Reuse the same zₜ, r, t and average-velocity network uθ.",
+      "Rearrange the identity into a compound instantaneous prediction Vθ=uθ+(t−r)sg(JVP). Merely moving the derivative term across the loss changes nothing.",
+      "Change the JVP direction from ε−x to a prediction vθ, obtained from uθ(z,t,t) or an auxiliary velocity head.",
+      "Regress Vθ toward ε−x in the basic unguided objective. The stochastic pair target no longer enters the compound predictor through its tangent.",
+      "Condition on guidance scale and interval; use multiple condition tokens alongside latent image tokens. Sample with the same z₀=ε−uθ(ε,0,1,…)."
+    ],
+    "formula": "vθ = uθ(zₜ,t,t);    Vθ = uθ(zₜ,r,t)+(t−r)sg[JVP(uθ;vθ)];    LiMF = E[‖Vθ−(ε−x)‖²]",
+    "example": "Reuse z=0.8,t=0.6,r=0.2 and u=0.5z+0.2t−0.1r+0.1=0.6. The boundary prediction is vθ=0.56. Its JVP is 0.5×0.56+0.2=0.48. Thus V=0.6+0.4×0.48=0.792; against target 3, the squared error is 4.875264. This larger single-example loss does not disprove improved training: the prediction rule has changed.",
+    "caveat": "Improved Mean Flows (iMF, arXiv:2512.02012) is the paper interpreted here, not the separate paper Understanding, Accelerating, and Improving MeanFlow Training. Better stability and FID are reported empirical results, not universal guarantees. The unguided teaching algorithm omits the full guided target and auxiliary-head recipe.",
+    "origin": "Geng et al., Improved Mean Flows: On the Challenges of Fastforward Generative Models (2025; CVPR 2026), revisit the original objective, introduce flexible guidance conditioning and change how conditions enter the transformer.",
+    "source": "https://arxiv.org/abs/2512.02012",
+    "check": "Would moving the original stopped JVP term from the target to the prediction, with the same ε−x tangent, already implement iMF?",
+    "answer": "No. It gives the same residual and the same direct-branch gradient. The core objective change is replacing the sampled conditional tangent with a predicted instantaneous velocity. Flexible guidance and in-context conditioning are further, separate changes.",
+    "study": {
+      "number": 3,
+      "subtitle": "Keep the jump. Improve how it is learned and controlled.",
+      "change": "Replace the JVP direction; expose guidance as inputs; replace summed modulation with multiple context tokens. The one-step sampling equation stays the same.",
+      "sections": [
+        {
+          "title": "Read the symbols before the equations",
+          "body": [
+            "x is a real example; ε (epsilon) is random noise; zₜ is an intermediate state. A state can be one number, a point with two coordinates, or thousands of image-latent coordinates. Bold vectors are not necessary here: the same arithmetic acts on every coordinate.",
+            "Throughout these three sections, t=0 means data and t=1 means noise. Generation travels backward, from 1 to 0. This reverses the convention used in some flow-matching presentations but does not change the underlying method. r is an earlier, less noisy time; 0 ≤ r ≤ t ≤ 1. h=t−r is the jump length.",
+            "θ (theta) names all learnable network weights. v means instantaneous velocity: motion per unit time right now. u means average velocity over a specified interval. E means an average over random training examples. ‖error‖² means square each coordinate error and add them. sg means keep a computed value but stop gradients through that branch."
+          ],
+          "formula": "zₜ = (1−t)x + tε     h = t−r     v꜀ = ε−x",
+          "kind": "Notation"
+        },
+        {
+          "title": "1. Separate three changes instead of attributing everything to architecture",
+          "body": [
+            "The iMF paper addresses the learning objective, the guidance mechanism and the transformer’s conditioning design. They are related but independently testable choices. A network can use the revised objective without the new conditioning architecture.",
+            "The basic derivation below is unguided and uses the boundary prediction rather than an extra head. It makes the central change visible with almost all the preceding chapter’s code reused. The full reported image results include additional recipe choices."
+          ],
+          "formula": "Same path + same interval prediction + same sampler; revised training direction and conditioning",
+          "kind": "Scope"
+        },
+        {
+          "title": "2. First rearrange; then make the actual change",
+          "body": [
+            "Original MeanFlow has residual uθ−sg(v꜀−hD). Since the sampled v꜀ does not depend on θ, it has the same value and direct-branch gradient as uθ+h sg(D)−v꜀. Calling uθ+h sg(D) a compound velocity prediction Vθ does not by itself improve the method.",
+            "If D=JVP(uθ;v꜀), this compound prediction uses the pair label v꜀ as an input. Compatible pairs can give different predictions even at the same state and time. A conventional regression predictor instead depends on the known input, not on which hidden endpoint pair supplied the label.",
+            "iMF replaces that tangent with a predicted instantaneous velocity. The simplest choice evaluates the same network at zero interval: vθ(z,t)=uθ(z,t,t). Another choice uses a separately trained velocity head sharing the main network. In either case the tangent is predicted from observable state and conditions.",
+            "For a scalar affine network, varying the pair tangent by δ changes D by aδ and V by h aδ. Thus conditional tangent variance contributes h²a² Var(v꜀|z,t) to the compound prediction when the coefficients and state are fixed. This algebra explains a possible amplification mechanism; it is not a theorem that all iMF training runs must be more stable."
+          ],
+          "formula": "Original tangent: v꜀=ε−x     →     iMF tangent: vθ(z,t)",
+          "kind": "Reparameterization and diagnosis"
+        },
+        {
+          "title": "3. Why stop-gradient is still here",
+          "body": [
+            "Use the predicted tangent to compute D, then form Vθ=uθ+h sg(D) and regress it toward v꜀. The target of this basic unguided loss is now the usual sampled velocity, with no network-derived term in the label.",
+            "The derivative branch remains stopped in the practical algorithm. Gradient descent therefore differentiates the direct uθ prediction while treating D as a constant for that update. This is not the full mathematical gradient of the numerical expression obtained by removing sg.",
+            "Without the stop, differentiating the derivative term with respect to weights introduces higher-order differentiation. The paper retains the stop for optimization reasons. Do not implement iMF by merely removing detach from the original MeanFlow target.",
+            "At r=t, h=0 and the correction disappears. Both recipes reduce to velocity regression at the boundary. The boundary call may add training work, while the auxiliary-head option changes training capacity; neither adds another generator call to the final one-jump sampler."
+          ],
+          "formula": "D = JVP(uθ; vθ);    Vθ = uθ + h sg(D);    loss = ‖Vθ−v꜀‖²",
+          "kind": "Practical algorithm"
+        },
+        {
+          "title": "4. Guidance becomes a requested property of the trajectory",
+          "body": [
+            "Classifier-free guidance combines class-conditional and unconditional instantaneous fields. With the convention below, ω=1 is the conditional field without extra guidance; ω=0 is unconditional, and ω>1 extrapolates toward the class condition. Stronger guidance is not automatically better.",
+            "Original MeanFlow learns a field for a fixed guidance setting. iMF gives the network the requested scale ω during training, then allows it to be supplied at inference. It also conditions on the time interval where extra guidance is active, Ω=(ω,tmin,tmax). Outside that interval the guided field uses scale 1.",
+            "Even one jump can depend on these interval limits: the predicted average summarizes a trajectory whose instantaneous guidance varies with time. Turning guidance off according only to the starting time of a one-step sampler would not represent that integrated trajectory.",
+            "The unguided target ε−x in the miniature algorithm below is not the full CFG training target. The official guided recipe constructs guided targets using network estimates, class-conditioning logic and sampled guidance settings. Adding ω tokens while leaving all targets unguided would teach no meaningful guidance control. Use the linked official implementation for that full recipe.",
+            "For the scale-only guided recipe, let ĝc and ĝ∅ be guided boundary velocity predictions with the class present or dropped. The paper’s target is vtarget=(ε−x)+(1−1/ω)(ĝc−ĝ∅), stopped during optimization. The iMF JVP direction is the predicted class-conditioned ĝc. At ω=1 the added target term vanishes. This formula is for positive sampled scales, not ω=0; the cited implementation samples ω≥1. Network-independent targets describe the basic unguided objective, not this self-referential guided extension.",
+            "A reconstruction of that target: if the unconditional boundary prediction represents v∅ and the conditional boundary represents g=ωvc+(1−ω)v∅, then g=vc+(1−1/ω)(g−v∅). Replace vc by the sampled ε−x and the unknown fields by current predictions. For a numerical illustration, ω=2, ε−x=3, ĝc=4 and ĝ∅=2 give target 4. This is a bootstrap target calculation, not a ground-truth guided label."
+          ],
+          "formula": "vCFG(z,t|c) = ω v(z,t|c) + (1−ω)v(z,t);    Ω=(ω,tmin,tmax)",
+          "kind": "Guidance definition and implementation boundary"
+        },
+        {
+          "title": "5. Architecture: put conditions into the token sequence",
+          "body": [
+            "The latent image path stays familiar: encode → mix → patchify → transformer → unpatchify → velocity grid. The change is how class, time and guidance settings are communicated to the transformer.",
+            "Instead of summing condition embeddings for parameter-heavy adaLN-zero modulation, iMF represents each condition using several context tokens and concatenates them with image tokens along the sequence dimension. Attention can read the individual conditions throughout processing. These tokens represent controls, not additional image patches.",
+            "The paper uses eight class tokens and four for each other condition. With five scalar conditions (two times, guidance scale, lower interval bound, upper interval bound), that is 28 condition tokens. For a 32×32×4 latent and 2×2 patches, there are 256 image tokens, giving 284 tokens before transformer processing. This shape calculation is a reconstruction of those stated settings, not a universal iMF shape.",
+            "After attention and token MLP blocks, only image tokens are projected to the average-velocity latent grid. The practical auxiliary v-head is used during training and can be omitted for inference. The boundary-call alternative needs no extra head.",
+            "The auxiliary branch shares most of the network but has its own last eight layers in the paper’s implementation. It needs an explicit velocity loss: stopping the JVP also stops learning through that route. The added loss supervises the v-head; the branch is discarded when generating with u alone.",
+            "Removing modulation parameters can reduce parameter count while extra tokens increase attention work. Fewer parameters therefore does not mean proportionally faster inference. The paper also studies updated transformer blocks and longer training; account for those when attributing gains.",
+            "The upgraded transformer recipe includes RMSNorm (normalize using root-mean-square feature magnitude), SwiGLU (a learned gate controls an MLP’s feature channel), and RoPE (rotate query/key coordinates to encode position). These change block internals independently of adding context tokens. A residual block still adds its attention and MLP updates to the incoming features.",
+            "Condition scalars first pass through positional embeddings and a two-layer MLP; replicated tokens receive learned embeddings identifying their roles. Removing adaLN-zero does not remove careful initialization: the residual update has a learned per-channel scale initialized at zero, so each residual block initially acts like the identity. These details help make the architecture reconstructable beyond the top-level diagram."
+          ],
+          "formula": "[image tokens; class tokens; time tokens; guidance tokens] → transformer → image-token velocity projection",
+          "kind": "Architecture"
+        },
+        {
+          "title": "6. Read the evidence without turning it into a promise",
+          "body": [
+            "The paper reports ImageNet 256×256, class-conditional generation with FID evaluated on 50,000 generated samples. Its system-level table lists original MF-XL/2 at 3.43 FID and iMF-XL/2 at 1.72 for one generator evaluation. These systems differ in architecture and compute; that comparison alone is not an isolated causal estimate of the new tangent rule.",
+            "Use the ablations for attribution: compare the objective change, guidance conditioning and in-context conditioning separately under the stated settings. Distinguish a reported benchmark from the analytic curves on this page. Our curves contain no reproduced image experiments.",
+            "One NFE counts one generator evaluation. It excludes the VAE decoder and says nothing by itself about training cost, memory or wall-clock latency. “Trained from scratch” concerns the flow generator; the image setup still uses a pretrained VAE representation."
+          ],
+          "formula": "Evidence: reported experiments ≠ mathematical guarantee ≠ this page’s toy output",
+          "kind": "Empirical evidence"
+        }
+      ],
+      "architecture": [
+        [
+          "Reuse the latent image path",
+          "x → encoder → noisy z → patch tokens",
+          "Example latent: 32×32×4, 256 patches"
+        ],
+        [
+          "Build distinct context tokens",
+          "Class ×8; each scalar condition ×4",
+          "Times + guidance scale + interval bounds"
+        ],
+        [
+          "Concatenate along sequence",
+          "256 image + 28 condition = 284 tokens",
+          "Illustrative /2 setup; token width stays D"
+        ],
+        [
+          "Transformer attention + MLP",
+          "Image and condition tokens interact",
+          "Multi-token conditioning replaces adaLN-zero"
+        ],
+        [
+          "Read image tokens → uθ",
+          "Training v: boundary call or auxiliary head",
+          "JVP follows predicted v, not pair label"
+        ],
+        [
+          "Same one-step sampler",
+          "z₀ = ε−uθ(ε,0,1,class,Ω)",
+          "Decode latent; no JVP at inference"
+        ]
+      ],
+      "research": [
+        "A useful ablation grid varies objective (MF/iMF), tangent source (boundary/auxiliary), and conditioning (modulation/context). Match budgets and evaluate more than one random seed. Do not change all three and attribute gains to one.",
+        "Possible thesis question, not a novelty claim: does tangent-estimation error interact with jump length or guidance strength? Measure boundary velocity error, JVP magnitude, interval-composition error, image quality, diversity and latency.",
+        "Before proposing a new method, read related work and search for prior art. State a falsifiable hypothesis, include matched baselines, and use held-out evaluation. The small scalar fit here can expose a sign or gradient mistake, but cannot validate a generative-model contribution."
+      ],
+      "sources": [
+        [
+          "Improved Mean Flows — Geng et al., arXiv v2, §4, Algorithms 1 and Tables 1–3",
+          "https://arxiv.org/html/2512.02012v2"
+        ],
+        [
+          "Official iMF implementation — imf.py (guided targets, auxiliary head, weighting)",
+          "https://github.com/Lyy-iiis/imeanflow/blob/main/imf.py"
+        ],
+        [
+          "Separate related paper: Understanding, Accelerating, and Improving MeanFlow Training",
+          "https://arxiv.org/abs/2511.19065"
+        ]
+      ]
+    },
+    "aliases": [
+      "improved mean flow",
+      "improved mean flows",
+      "iMF",
+      "iMeanFlow"
+    ]
   }
 ]

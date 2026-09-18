@@ -8,7 +8,8 @@
     "test": "node --test test/math.test.js",
     "check": "node scripts/check.mjs",
     "test:browser": "playwright test",
-    "vault:scan": "sudo -n python scripts/scan-vault.py"
+    "vault:scan": "sudo -n python scripts/scan-vault.py",
+    "test:python": "node --test test/python-parity.test.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
